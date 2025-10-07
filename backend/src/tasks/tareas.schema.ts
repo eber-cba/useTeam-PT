@@ -18,6 +18,9 @@ export class Tarea extends Document {
   @Prop({ default: () => new Date() })
   fechaCreacion: Date;
 
+  @Prop({ type: String, required: false })
+  clientTempId?: string;
+
   @Prop({ type: Object })
   createdBy: any;
 

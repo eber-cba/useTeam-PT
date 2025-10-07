@@ -20,10 +20,15 @@ export class TareasGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
+  // Usuarios conectados
+  private connectedUsers: Record<string, { id: string; name?: string; email?: string }> = {};
+
   constructor(private readonly tareasService: TareasService) {}
 
   handleConnection(client: Socket) {
     console.log(`Cliente conectado: ${client.id}`);
+    this.connectedUsers[client.id] = { id: client.id };
+    this.server.emit('users-connected', Object.values(this.connectedUsers));
     client.emit('connected', {
       message: 'Conectado al servidor de colaboración',
     });
@@ -31,6 +36,8 @@ export class TareasGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: Socket) {
     console.log(`Cliente desconectado: ${client.id}`);
+    delete this.connectedUsers[client.id];
+    this.server.emit('users-connected', Object.values(this.connectedUsers));
   }
 
   @SubscribeMessage('join-kanban')
@@ -59,8 +66,8 @@ export class TareasGateway implements OnGatewayConnection, OnGatewayDisconnect {
         data.newColumna,
       );
 
-      // Emitir a todos los clientes en la sala (excepto al que envió el evento)
-      client.to('kanban-room').emit('task-updated', {
+      // Emitir a todos los clientes en la sala (incluyendo al que envió el evento)
+      this.server.to('kanban-room').emit('task-updated', {
         task: updatedTask,
         movedBy: data.userId || client.id,
         timestamp: new Date().toISOString(),

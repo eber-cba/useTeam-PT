@@ -3,6 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Tarea } from './tareas.schema';
 
+interface TareaConTempId extends Partial<Tarea> {
+  clientTempId?: string;
+}
+
 @Injectable()
 export class TareasService {
   constructor(@InjectModel(Tarea.name) private tareaModel: Model<Tarea>) {}
@@ -11,17 +15,33 @@ export class TareasService {
     return this.tareaModel.find().exec();
   }
 
-  async create(createDto: Partial<Tarea>) {
-    // Ensure we don't accept a client-provided _id (could be a temp id)
-    const data: any = { ...createDto };
-    if (data._id) delete data._id;
-    if (data.clientTempId) delete data.clientTempId;
+  async create(createTareaDto: Partial<Tarea>): Promise<TareaConTempId> {
+    console.log('Datos recibidos para crear tarea:', createTareaDto);
 
-    // Attach metadata if provided
-    if (createDto.createdBy) data.createdBy = createDto.createdBy;
+    // Eliminar _id temporal si existe
+    if (createTareaDto._id) {
+      delete createTareaDto._id;
+    }
 
-    const created = new this.tareaModel(data);
-    return created.save();
+    const createdTarea = new this.tareaModel(createTareaDto);
+    const savedTarea = await createdTarea.save();
+
+    if (!savedTarea) {
+      throw new Error('Error al guardar la tarea en la base de datos.');
+    }
+
+    console.log('Tarea guardada en la base de datos:', savedTarea);
+
+    const savedObject = savedTarea.toObject?.() ?? (savedTarea as any);
+
+    const response: TareaConTempId = {
+      ...savedObject,
+      clientTempId: createTareaDto.clientTempId,
+    };
+
+    console.log('Respuesta enviada al cliente:', response);
+
+    return response;
   }
 
   update(id: string, updateDto: Partial<Tarea>) {
@@ -39,24 +59,24 @@ export class TareasService {
     return this.tareaModel.findByIdAndDelete(id).exec();
   }
 
-  updateTaskColumn(taskId: string, newColumna: string) {
+  async updateTaskColumn(taskId: string, newColumna: string, order?: number) {
+    const updateData: any = { columna: newColumna };
+    if (order !== undefined) updateData.order = order;
+
     return this.tareaModel
-      .findByIdAndUpdate(taskId, { columna: newColumna }, { new: true })
+      .findByIdAndUpdate(taskId, updateData, { new: true })
       .exec();
   }
 
   async exportAndEmail(userEmail: string, userName: string) {
     try {
-      // Llamar a n8n para manejar la exportación y envío de email
       const n8nWebhookUrl =
         process.env.N8N_WEBHOOK_URL ||
         'http://localhost:5678/webhook/kanban-export';
 
       const response = await fetch(n8nWebhookUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userEmail,
           userName,
@@ -76,11 +96,11 @@ export class TareasService {
         n8nProcessed: true,
         message: 'Exportación procesada por n8n',
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error en exportAndEmail:', error);
       return {
         success: false,
-        error: error.message,
+        error: error?.message || 'Error desconocido',
       };
     }
   }

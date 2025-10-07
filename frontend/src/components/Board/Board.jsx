@@ -46,9 +46,17 @@ export default function Board() {
 
     // Otherwise, it's a task move: over.id is the column id/name
     const taskId = activeId;
-    const newColumn = overId;
+    const columnId = overId;
     const task = tasks.find((t) => t._id === taskId);
-    if (task && task.columna !== newColumn) moveTask(taskId, newColumn);
+    
+    // Find the column by ID or name to get the correct column name
+    const targetColumn = columns.find(col => 
+      (col._id && col._id === columnId) || col.name === columnId
+    );
+    
+    if (task && targetColumn && task.columna !== targetColumn.name) {
+      moveTask(taskId, targetColumn.name);
+    }
   };
 
   const getTasksForColumn = (column) => {

@@ -101,4 +101,9 @@ export class AuthService {
   async findUserById(id: string) {
     return this.userModel.findById(id).select('-password');
   }
+
+  async getAllUsers() {
+    // Devuelve todos los usuarios registrados (sin contraseñas)
+    return this.userModel.find({}, '-password').lean();
+  }
 }

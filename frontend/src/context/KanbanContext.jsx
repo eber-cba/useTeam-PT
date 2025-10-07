@@ -1,3 +1,4 @@
+// src/context/KanbanContext.jsx
 import React, { createContext, useState, useEffect } from "react";
 import { useSocket } from "../hooks/useSocket";
 import { useAuth } from "./AuthContext";
@@ -7,7 +8,6 @@ export const KanbanContext = createContext();
 
 export const KanbanProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]);
-  // columns are objects: { _id?, name }
   const [columns, setColumns] = useState([
     { name: "Por hacer" },
     { name: "En progreso" },
@@ -15,28 +15,29 @@ export const KanbanProvider = ({ children }) => {
   ]);
   const [isConnected, setIsConnected] = useState(false);
   const [collaborators, setCollaborators] = useState([]);
+
   const socket = useSocket();
-  const { getAuthHeaders, token } = useAuth();
+  const { getAuthHeaders, token, user } = useAuth();
   const { addToast } = useToast();
 
-  // Load tasks
+  // Carga inicial de tareas
   useEffect(() => {
     fetch("http://localhost:3000/api/tareas")
       .then((res) => res.json())
-      .then((data) => setTasks(data))
+      .then((data) => {
+        if (Array.isArray(data)) setTasks(data.filter(Boolean));
+      })
       .catch((err) => {
         console.error("Error loading tasks", err);
-        try {
-          addToast({
-            title: "Error",
-            description: "No se pudieron cargar las tareas.",
-            type: "error",
-          });
-        } catch (e) {}
+        addToast?.({
+          title: "Error",
+          description: "No se pudieron cargar las tareas.",
+          type: "error",
+        });
       });
-  }, []);
+  }, [addToast]);
 
-  // Load columns from backend (seeded if empty)
+  // Carga inicial de columnas
   useEffect(() => {
     fetch("http://localhost:3000/api/columns")
       .then((res) => res.json())
@@ -45,75 +46,75 @@ export const KanbanProvider = ({ children }) => {
           setColumns(data.map((c) => ({ _id: c._id, name: c.name })));
         }
       })
-      .catch((e) => {
-        // keep defaults
-      });
+      .catch(() => {});
   }, []);
 
   // WebSocket events
   useEffect(() => {
     if (!socket) return;
+    window.socket = socket;
 
     socket.on("connect", () => setIsConnected(true));
     socket.on("disconnect", () => setIsConnected(false));
 
-    socket.on("task-added", (data) => setTasks((prev) => [...prev, data.task]));
-    socket.on("task-updated", (data) =>
-      setTasks((prev) =>
-        prev.map((t) => (t._id === data.task._id ? data.task : t))
-      )
-    );
-    socket.on("task-modified", (data) =>
-      setTasks((prev) =>
-        prev.map((t) => (t._id === data.task._id ? data.task : t))
-      )
-    );
-    socket.on("task-removed", (data) =>
-      setTasks((prev) => prev.filter((t) => t._id !== data.taskId))
-    );
+    const safeMapReplace = (arr, id, newItem) =>
+      Array.isArray(arr) ? arr.map((t) => (t?._id === id ? newItem : t)) : arr;
 
-    // Column events
-    socket.on("column-created", (data) => {
-      const c = data.column;
-      setColumns((prev) => {
-        const exists = prev.some(
-          (pc) => pc._id === c._id || pc.name === c.name
-        );
-        if (exists) return prev;
-        return [...prev, { _id: c._id, name: c.name }];
+    socket.on("task-added", (data) => {
+      if (!data) return;
+      const task = data.task ?? data;
+      setTasks((prev = []) => [...prev.filter(Boolean), task]);
+    });
+
+    socket.on("task-updated", (data) => {
+      const { task } = data;
+      
+      setTasks((prevTasks) => {
+        const existingTask = prevTasks.find(t => t._id === task._id);
+        
+        if (existingTask) {
+          return safeMapReplace(prevTasks, task._id, task);
+        } else {
+          return [...prevTasks, task];
+        }
       });
     });
 
-    socket.on("column-removed", (data) => {
+    socket.on("task-removed", (data) => {
+      if (!data) return;
+      const id = data.taskId ?? data;
+      setTasks((prev = []) => prev.filter((t) => t?._id !== id));
+    });
+
+    socket.on("column-created", (data) => {
+      if (!data?.column) return;
       const c = data.column;
-      setColumns((prev) =>
+      setColumns((prev = []) =>
+        prev.some((pc) => pc?._id === c._id || pc?.name === c.name)
+          ? prev
+          : [...prev, { _id: c._id, name: c.name }]
+      );
+    });
+
+    socket.on("column-removed", (data) => {
+      if (!data?.column) return;
+      const c = data.column;
+      setColumns((prev = []) =>
         prev.filter((pc) => (c._id ? pc._id !== c._id : pc.name !== c.name))
       );
-      // Move tasks from removed column to 'Por hacer'
-      setTasks((prev) =>
+      setTasks((prev = []) =>
         prev.map((t) =>
-          t.columna === (c.name || "") ? { ...t, columna: "Por hacer" } : t
+          t?.columna === (c.name || "") ? { ...t, columna: "Por hacer" } : t
         )
       );
     });
 
     socket.on("column-updated", (data) => {
+      if (!data?.column) return;
       const c = data.column;
-      setColumns((prev) =>
-        prev.map((pc) => (pc._id === c._id ? { ...pc, name: c.name } : pc))
+      setColumns((prev = []) =>
+        prev.map((pc) => (pc?._id === c._id ? { ...pc, name: c.name } : pc))
       );
-    });
-
-    socket.on("column-reordered", (data) => {
-      if (Array.isArray(data.columns)) {
-        // Ordenar las columnas por el campo 'order' si existe
-        const sorted = [...data.columns].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        setColumns(sorted);
-      }
-    });
-
-    socket.on("error", (err) => {
-      console.error("Socket error", err);
     });
 
     return () => {
@@ -121,21 +122,16 @@ export const KanbanProvider = ({ children }) => {
       socket.off("disconnect");
       socket.off("task-added");
       socket.off("task-updated");
-      socket.off("task-modified");
       socket.off("task-removed");
       socket.off("column-created");
       socket.off("column-removed");
       socket.off("column-updated");
-      socket.off("column-reordered");
-      socket.off("error");
     };
   }, [socket]);
 
   // Column management
   const addColumn = async (name) => {
-    if (!name || !name.trim()) return;
-    if (columns.some((c) => c.name === name)) return;
-
+    if (!name?.trim() || columns.some((c) => c?.name === name)) return;
     const headers = token
       ? getAuthHeaders()
       : { "Content-Type": "application/json" };
@@ -145,232 +141,137 @@ export const KanbanProvider = ({ children }) => {
         headers,
         body: JSON.stringify({ name }),
       });
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.message || `HTTP ${res.status}`);
-      }
+      if (!res.ok) throw new Error("Error creando columna");
       const created = await res.json();
-      // NO agregar localmente, solo emitir por socket
-      if (socket && isConnected)
-        socket.emit("column-created", { column: created });
+      setColumns((prev = []) => [
+        ...prev,
+        { _id: created._id, name: created.name },
+      ]);
     } catch (err) {
       console.error("Error creando columna:", err);
-      // fallback local SOLO si hay error de red
-      setColumns((prev) => [...prev, { name }]);
+      setColumns((prev = []) => [...prev, { name }]);
     }
   };
 
-
   const removeColumn = (idOrName) => {
-    const byId = columns.find((c) => c._id === idOrName);
-    const name = byId ? byId.name : idOrName;
-    if (byId && token) {
-      const headers = getAuthHeaders();
-      fetch(`http://localhost:3000/api/columns/${byId._id}`, {
-        method: "DELETE",
-        headers,
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            const errBody = await res.json().catch(() => ({}));
-            throw new Error(errBody.message || `HTTP ${res.status}`);
-          }
-          return res.json();
-        })
-        .then(() => {
-          setColumns((prev) => prev.filter((c) => c._id !== byId._id));
-          setTasks((prev) =>
-            prev.map((t) =>
-              t.columna === name ? { ...t, columna: "Por hacer" } : t
-            )
-          );
-          if (socket && isConnected)
-            socket.emit("column-removed", { column: { _id: byId._id, name } });
-        })
-        .catch((err) => console.error("Error eliminando columna:", err));
-      return;
-    }
-
-    // fallback by name
-    setColumns((prev) => prev.filter((c) => c.name !== name));
-    setTasks((prev) =>
-      prev.map((t) => (t.columna === name ? { ...t, columna: "Por hacer" } : t))
+    const byId = columns.find((c) => c?._id === idOrName);
+    const name = byId?.name ?? idOrName;
+    setColumns((prev) =>
+      prev.filter((c) => (byId ? c._id !== byId._id : c.name !== name))
     );
-    if (socket && isConnected)
-      socket.emit("column-removed", { column: { name } });
+    setTasks((prev) =>
+      prev.map((t) =>
+        t?.columna === name ? { ...t, columna: "Por hacer" } : t
+      )
+    );
   };
 
   const reorderColumns = (newColumns) => {
     setColumns(newColumns.map((c, idx) => ({ ...c, order: idx })));
-    newColumns.forEach((c, idx) => {
-      if (c._id && token) {
-        const headers = getAuthHeaders();
-        fetch(`http://localhost:3000/api/columns/${c._id}`, {
-          method: "PUT",
-          headers,
-          body: JSON.stringify({ order: idx }),
-        })
-          .then((r) => r.json())
-          .catch((e) => console.error("Error persisting column order", e));
-      }
-    });
-    if (socket && isConnected) {
-      socket.emit("column-reordered", { columns: newColumns });
-    }
   };
 
-  // Task operations
-  const moveTask = (taskId, newColumna) => {
-    setTasks((prev) =>
-      prev.map((t) => (t._id === taskId ? { ...t, columna: newColumna } : t))
-    );
+  // Tasks
+  const addTask = async (newTask) => {
+    const tempId = newTask._id; // id temporal
     const headers = token
       ? getAuthHeaders()
       : { "Content-Type": "application/json" };
-    fetch(`http://localhost:3000/api/tareas/${taskId}`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({ columna: newColumna }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => ({}));
-          throw new Error(errBody.message || `HTTP ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((updated) => {
-        setTasks((prev) =>
-          prev.map((t) => (t._id === updated._id ? updated : t))
-        );
-        if (socket && isConnected)
-          socket.emit("task-moved", {
-            taskId,
-            newColumna,
-            userId: "user-" + Math.random().toString(36).substr(2, 9),
-          });
-      })
-      .catch((err) => {
-        console.error("Error moviendo tarea:", err);
-        try {
-          addToast({ title: "Error", description: err.message, type: "error" });
-        } catch (e) {}
-      });
-  };
 
-  const addTask = (newTask) => {
-    const headers = token
-      ? getAuthHeaders()
-      : { "Content-Type": "application/json" };
-    fetch("http://localhost:3000/api/tareas", {
+    const response = await fetch("http://localhost:3000/api/tareas", {
       method: "POST",
       headers,
       body: JSON.stringify(newTask),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => ({}));
-          throw new Error(errBody.message || `HTTP ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((saved) => {
-        setTasks((prev) => {
-          if (saved.clientTempId)
-            return prev.map((t) =>
-              t.clientTempId === saved.clientTempId ? saved : t
-            );
-          const exists = prev.some((t) => t._id === saved._id);
-          if (exists) return prev.map((t) => (t._id === saved._id ? saved : t));
-          return [
-            ...prev.filter((t) => !String(t._id).startsWith("temp-")),
-            saved,
-          ];
-        });
-        if (socket && isConnected)
-          socket.emit("task-created", {
-            task: saved,
-            userId: "user-" + Math.random().toString(36).substr(2, 9),
-          });
-      })
-      .catch((err) => {
-        console.error("Error guardando tarea:", err);
-        try {
-          addToast({ title: "Error", description: err.message, type: "error" });
-        } catch (e) {}
-        setTasks((prev) => [...prev, newTask]);
-      });
+    });
+    const saved = await response.json();
+
+    // Reemplazar la tarea temporal por la real
+    setTasks((prev) => prev.map((t) => (t._id === tempId ? saved : t)));
   };
 
   const updateTask = (taskId, updates) => {
-    setTasks((prev) =>
-      prev.map((t) => (t._id === taskId ? { ...t, ...updates } : t))
+    setTasks((prev = []) =>
+      prev.map((t) => (t?._id === taskId ? { ...t, ...updates } : t))
     );
-    const headers = token
-      ? getAuthHeaders()
-      : { "Content-Type": "application/json" };
-    fetch(`http://localhost:3000/api/tareas/${taskId}`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify(updates),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => ({}));
-          throw new Error(errBody.message || `HTTP ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((updated) => {
-        setTasks((prev) =>
-          prev.map((t) => (t._id === updated._id ? updated : t))
-        );
-        if (socket && isConnected)
-          socket.emit("task-updated", {
-            taskId,
-            updates,
-            userId: "user-" + Math.random().toString(36).substr(2, 9),
-          });
-      })
-      .catch((err) => {
-        console.error("Error actualizando tarea:", err);
-        try {
-          addToast({ title: "Error", description: err.message, type: "error" });
-        } catch (e) {}
-      });
   };
 
   const deleteTask = (taskId) => {
-    setTasks((prev) => prev.filter((t) => t._id !== taskId));
-    const headers = token ? getAuthHeaders() : undefined;
-    fetch(`http://localhost:3000/api/tareas/${taskId}`, {
-      method: "DELETE",
-      headers,
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => ({}));
-          throw new Error(errBody.message || `HTTP ${res.status}`);
-        }
-        if (socket && isConnected)
-          socket.emit("task-deleted", {
-            taskId,
-            userId: "user-" + Math.random().toString(36).substr(2, 9),
-          });
-      })
-      .catch((err) => {
-        console.error("Error eliminando tarea:", err);
-        try {
-          addToast({ title: "Error", description: err.message, type: "error" });
-        } catch (e) {}
+    setTasks((prev = []) => prev.filter((t) => t?._id !== taskId));
+  };
+
+  const moveTask = async (taskId, targetColumnName, order) => {
+    const taskToMove = tasks.find((task) => task._id === taskId);
+    if (!taskToMove) {
+      console.error("Tarea no encontrada:", taskId);
+      return;
+    }
+
+    // Si es una tarea temporal, actualizar solo localmente
+    if (taskToMove.clientTempId) {
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task._id === taskId ? { ...task, columna: targetColumnName } : task
+        )
+      );
+      return;
+    }
+
+    // Actualizar estado local inmediatamente
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task._id === taskId ? { ...task, columna: targetColumnName } : task
+      )
+    );
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/tareas/${taskId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ columna: targetColumnName, orden: order }),
       });
+
+      if (response.ok) {
+        const updated = await response.json();
+        
+        // Actualizar con la respuesta del backend
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task._id === taskId ? updated : task
+          )
+        );
+
+        // Emitir evento WebSocket
+        socket?.emit("task-moved", { 
+          taskId: updated._id, 
+          newColumna: updated.columna, 
+          userId: user?.id
+        });
+      } else {
+        console.error("Error al mover tarea:", response.statusText);
+        // Revertir cambio local en caso de error
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task._id === taskId ? taskToMove : task
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error al mover tarea:", error);
+      // Revertir cambio local en caso de error
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task._id === taskId ? taskToMove : task
+        )
+      );
+    }
   };
 
   return (
     <KanbanContext.Provider
       value={{
         tasks,
-        setTasks,
         columns,
         addColumn,
         removeColumn,
@@ -391,8 +292,6 @@ export const KanbanProvider = ({ children }) => {
 export const useKanban = () => {
   const context = React.useContext(KanbanContext);
   if (!context)
-    throw new Error("useKanban debe ser usado dentro de un KanbanProvider");
+    throw new Error("useKanban debe usarse dentro de KanbanProvider");
   return context;
 };
-
-export default KanbanProvider;

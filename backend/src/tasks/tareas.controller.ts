@@ -28,7 +28,6 @@ export class TareasController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Body() body: any, @Request() req: any) {
-    // Use authenticated user as creator when available
     const creator = req.user
       ? {
           id: req.user.id || req.user._id,
@@ -36,9 +35,11 @@ export class TareasController {
           email: req.user.email,
         }
       : body.createdBy || null;
+
     const payload = { ...body, createdBy: creator };
     const saved = await this.tareasService.create(payload);
-    // Emitir evento de tarea creada para sincronizar en tiempo real
+
+    // Emitir evento para sincronización en tiempo real
     try {
       this.tareasGateway.emitTaskUpdate('task-added', {
         task: saved,
@@ -48,15 +49,22 @@ export class TareasController {
     } catch (err) {
       console.error('Error emitiendo evento task-added desde controller:', err);
     }
-    // Devolver el clientTempId (si vino) para que el cliente reemplace el temporal exacto
-    const response = { ...saved.toObject() } as any;
+
+    // Uso seguro de toObject
+    const savedObject = saved.toObject?.() ?? saved;
+    const response = { ...savedObject };
     if (body.clientTempId) response.clientTempId = body.clientTempId;
+
     return response;
   }
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
-  update(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+  async update(
+    @Param('id') id: string,
+    @Body() body: any,
+    @Request() req: any,
+  ) {
     const editor = req.user
       ? {
           id: req.user.id || req.user._id,
@@ -64,14 +72,20 @@ export class TareasController {
           email: req.user.email,
         }
       : body.lastEditedBy || null;
+
     const payload = { ...body, lastEditedBy: editor };
-    return this.tareasService.update(id, payload);
+    const updated = await this.tareasService.update(id, payload);
+
+    const updatedObject = updated?.toObject?.() ?? updated;
+    return updatedObject;
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  delete(@Param('id') id: string) {
-    return this.tareasService.delete(id);
+  async delete(@Param('id') id: string) {
+    const deleted = await this.tareasService.delete(id);
+    const deletedObject = deleted?.toObject?.() ?? deleted;
+    return deletedObject;
   }
 
   @UseGuards(JwtAuthGuard)

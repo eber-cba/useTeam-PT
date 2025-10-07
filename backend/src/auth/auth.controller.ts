@@ -39,4 +39,10 @@ export class AuthController {
       message: 'Usuario autenticado correctamente',
     };
   }
+
+  @Get('users')
+  async getAllUsers() {
+    // Devuelve todos los usuarios registrados (sin contraseñas)
+    return this.authService.getAllUsers();
+  }
 }
