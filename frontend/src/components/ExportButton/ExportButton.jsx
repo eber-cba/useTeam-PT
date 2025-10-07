@@ -1,15 +1,21 @@
 import React, { useState } from "react";
 import { useKanban } from "../../context/KanbanContext";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 
 export default function ExportButton() {
   const { tasks } = useKanban();
   const { getAuthHeaders, user, isAuthenticated } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
+  const { addToast } = useToast();
 
   const handleExport = async () => {
     if (!user || !user.email) {
-      alert("Debes iniciar sesión para exportar por email.");
+      addToast({
+        title: "Autenticación requerida",
+        description: "Debes iniciar sesión para exportar por email.",
+        type: "warning",
+      });
       return;
     }
 
@@ -29,15 +35,25 @@ export default function ExportButton() {
       const result = await response.json();
 
       if (result.success) {
-        alert(
-          "🚀 Exportación procesada por n8n. Revisa tu email para descargar el CSV adjunto."
-        );
+        addToast({
+          title: "Exportación iniciada",
+          description: "🚀 n8n procesará el CSV y te lo enviará por email.",
+          type: "success",
+        });
       } else {
-        alert("Error al exportar: " + (result.error || JSON.stringify(result)));
+        addToast({
+          title: "Error exportando",
+          description: result.error || JSON.stringify(result),
+          type: "error",
+        });
       }
     } catch (err) {
       console.error(err);
-      alert("Error al exportar el backlog: " + err.message);
+      addToast({
+        title: "Error",
+        description: "Error al exportar el backlog: " + err.message,
+        type: "error",
+      });
     } finally {
       setIsExporting(false);
     }

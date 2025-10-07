@@ -7,24 +7,51 @@ import {
   Param,
   UseGuards,
   Request,
+  Put,
 } from '@nestjs/common';
 import { TareasService } from './tareas.service';
+import { TareasGateway } from './tareas.gateway';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('tareas')
 export class TareasController {
-  constructor(private readonly tareasService: TareasService) {}
+  constructor(
+    private readonly tareasService: TareasService,
+    private readonly tareasGateway: TareasGateway,
+  ) {}
 
   @Get()
   findAll() {
     return this.tareasService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() body: any) {
-    return this.tareasService.create(body);
+  async create(@Body() body: any) {
+    const saved = await this.tareasService.create(body);
+    // Emitir evento de tarea creada para sincronizar en tiempo real
+    try {
+      this.tareasGateway.emitTaskUpdate('task-added', {
+        task: saved,
+        createdBy: body.createdBy || null,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.error('Error emitiendo evento task-added desde controller:', err);
+    }
+    // Devolver el clientTempId (si vino) para que el cliente reemplace el temporal exacto
+    const response = { ...saved.toObject() } as any;
+    if (body.clientTempId) response.clientTempId = body.clientTempId;
+    return response;
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  update(@Param('id') id: string, @Body() body: any) {
+    return this.tareasService.update(id, body);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   delete(@Param('id') id: string) {
     return this.tareasService.delete(id);

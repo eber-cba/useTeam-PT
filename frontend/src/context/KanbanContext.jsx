@@ -1,5 +1,7 @@
 import React, { createContext, useState, useEffect } from "react";
 import { useSocket } from "../hooks/useSocket";
+import { useAuth } from "./AuthContext";
+import { useToast } from "./ToastContext";
 
 export const KanbanContext = createContext();
 
@@ -9,13 +11,24 @@ export const KanbanProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [collaborators, setCollaborators] = useState([]);
   const socket = useSocket();
+  const { getAuthHeaders, token } = useAuth();
+  const { addToast } = useToast();
 
   // Cargar tareas iniciales
   useEffect(() => {
     fetch("http://localhost:3000/api/tareas")
       .then((res) => res.json())
       .then((data) => setTasks(data))
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        try {
+          addToast({
+            title: "Error",
+            description: "No se pudieron cargar las tareas.",
+            type: "error",
+          });
+        } catch (e) {}
+      });
   }, []);
 
   // Configurar eventos de WebSocket
@@ -60,6 +73,13 @@ export const KanbanProvider = ({ children }) => {
 
     socket.on("error", (error) => {
       console.error("Error del servidor WebSocket:", error);
+      try {
+        addToast({
+          title: "WebSocket",
+          description: "Error en la conexión en tiempo real.",
+          type: "warning",
+        });
+      } catch (e) {}
     });
 
     return () => {
@@ -78,28 +98,89 @@ export const KanbanProvider = ({ children }) => {
     setTasks((prev) =>
       prev.map((t) => (t._id === taskId ? { ...t, columna: newColumna } : t))
     );
+    // Persistir en backend
+    const headers = token
+      ? getAuthHeaders()
+      : { "Content-Type": "application/json" };
 
-    // Enviar al servidor para colaboración
-    if (socket && isConnected) {
-      socket.emit("task-moved", {
-        taskId,
-        newColumna,
-        userId: "user-" + Math.random().toString(36).substr(2, 9), // ID temporal del usuario
+    fetch(`http://localhost:3000/api/tareas/${taskId}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ columna: newColumna }),
+    })
+      .then((res) => res.json())
+      .then((updated) => {
+        setTasks((prev) =>
+          prev.map((t) => (t._id === updated._id ? updated : t))
+        );
+        if (socket && isConnected) {
+          socket.emit("task-moved", {
+            taskId,
+            newColumna,
+            userId: "user-" + Math.random().toString(36).substr(2, 9),
+          });
+        }
+      })
+      .catch((err) => {
+        console.error("Error moviendo tarea:", err);
+        try {
+          addToast({
+            title: "Error",
+            description: "No se pudo mover la tarea.",
+            type: "error",
+          });
+        } catch (e) {}
       });
-    }
   };
 
   const addTask = (newTask) => {
-    // Agregar localmente primero
-    setTasks((prev) => [...prev, newTask]);
+    // Persistir en el backend
+    const headers = token
+      ? getAuthHeaders()
+      : { "Content-Type": "application/json" };
 
-    // Enviar al servidor para colaboración
-    if (socket && isConnected) {
-      socket.emit("task-created", {
-        task: newTask,
-        userId: "user-" + Math.random().toString(36).substr(2, 9),
+    fetch("http://localhost:3000/api/tareas", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(newTask),
+    })
+      .then((res) => res.json())
+      .then((saved) => {
+        // Reemplazar la tarea temporal por la guardada usando clientTempId si existe
+        setTasks((prev) => {
+          if (saved.clientTempId) {
+            return prev.map((t) =>
+              t.clientTempId === saved.clientTempId ? saved : t
+            );
+          }
+          const exists = prev.some((t) => t._id === saved._id);
+          if (exists) return prev.map((t) => (t._id === saved._id ? saved : t));
+          return [
+            ...prev.filter((t) => !String(t._id).startsWith("temp-")),
+            saved,
+          ];
+        });
+
+        // Emitir al servidor para colaboración (si está conectado)
+        if (socket && isConnected) {
+          socket.emit("task-created", {
+            task: saved,
+            userId: "user-" + Math.random().toString(36).substr(2, 9),
+          });
+        }
+      })
+      .catch((err) => {
+        console.error("Error guardando tarea:", err);
+        try {
+          addToast({
+            title: "Error",
+            description: "No se pudo guardar la tarea en el servidor.",
+            type: "error",
+          });
+        } catch (e) {}
+        // Fallback: añadir localmente
+        setTasks((prev) => [...prev, newTask]);
       });
-    }
   };
 
   const updateTask = (taskId, updates) => {
@@ -107,28 +188,69 @@ export const KanbanProvider = ({ children }) => {
     setTasks((prev) =>
       prev.map((task) => (task._id === taskId ? { ...task, ...updates } : task))
     );
+    // Persistir en backend
+    const headers = token
+      ? getAuthHeaders()
+      : { "Content-Type": "application/json" };
 
-    // Enviar al servidor para colaboración
-    if (socket && isConnected) {
-      socket.emit("task-updated", {
-        taskId,
-        updates,
-        userId: "user-" + Math.random().toString(36).substr(2, 9),
+    fetch(`http://localhost:3000/api/tareas/${taskId}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(updates),
+    })
+      .then((res) => res.json())
+      .then((updated) => {
+        setTasks((prev) =>
+          prev.map((t) => (t._id === updated._id ? updated : t))
+        );
+        if (socket && isConnected) {
+          socket.emit("task-updated", {
+            taskId,
+            updates,
+            userId: "user-" + Math.random().toString(36).substr(2, 9),
+          });
+        }
+      })
+      .catch((err) => {
+        console.error("Error actualizando tarea:", err);
+        try {
+          addToast({
+            title: "Error",
+            description: "No se pudo actualizar la tarea.",
+            type: "error",
+          });
+        } catch (e) {}
       });
-    }
   };
 
   const deleteTask = (taskId) => {
     // Eliminar localmente primero
     setTasks((prev) => prev.filter((task) => task._id !== taskId));
-
-    // Enviar al servidor para colaboración
-    if (socket && isConnected) {
-      socket.emit("task-deleted", {
-        taskId,
-        userId: "user-" + Math.random().toString(36).substr(2, 9),
+    // Persistir en backend
+    const headers = token ? getAuthHeaders() : undefined;
+    fetch(`http://localhost:3000/api/tareas/${taskId}`, {
+      method: "DELETE",
+      headers,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Error eliminando tarea");
+        if (socket && isConnected) {
+          socket.emit("task-deleted", {
+            taskId,
+            userId: "user-" + Math.random().toString(36).substr(2, 9),
+          });
+        }
+      })
+      .catch((err) => {
+        console.error("Error eliminando tarea:", err);
+        try {
+          addToast({
+            title: "Error",
+            description: "No se pudo eliminar la tarea.",
+            type: "error",
+          });
+        } catch (e) {}
       });
-    }
   };
 
   return (
@@ -157,3 +279,5 @@ export const useKanban = () => {
   }
   return context;
 };
+
+export default KanbanProvider;

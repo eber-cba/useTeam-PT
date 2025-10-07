@@ -13,10 +13,11 @@ export default function TaskForm({ onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.titulo.trim()) return;
-
+    const tempId = `temp-${Date.now()}`;
     const newTask = {
       ...formData,
-      _id: `temp-${Date.now()}`, // ID temporal
+      _id: tempId, // ID temporal para UI
+      clientTempId: tempId,
       fechaCreacion: new Date().toISOString(),
       estado: "activa",
     };

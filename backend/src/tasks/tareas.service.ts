@@ -11,8 +11,13 @@ export class TareasService {
     return this.tareaModel.find().exec();
   }
 
-  create(createDto: Partial<Tarea>) {
-    const created = new this.tareaModel(createDto);
+  async create(createDto: Partial<Tarea>) {
+    // Ensure we don't accept a client-provided _id (could be a temp id)
+    const data: any = { ...createDto };
+    if (data._id) delete data._id;
+    if (data.clientTempId) delete data.clientTempId;
+
+    const created = new this.tareaModel(data);
     return created.save();
   }
 

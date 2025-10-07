@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./App.css";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { KanbanProvider } from "./context/KanbanContext";
+import { ToastProvider } from "./context/ToastContext";
 import Board from "./components/Board/Board";
 import ExportButton from "./components/ExportButton/ExportButton";
 import ConnectionStatus from "./components/ConnectionStatus/ConnectionStatus";
@@ -60,7 +61,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </AuthProvider>
   );
 }
