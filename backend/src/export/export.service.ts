@@ -9,7 +9,7 @@ export class ExportService {
    * It will include an email recipient list taken from the optional
    * `recipients` parameter or the `N8N_EMAIL_TO` env var (comma separated).
    */
-  async triggerExport(recipients?: string[]) {
+  async triggerExport(recipients?: string[], column?: string, fields?: string[], mensaje?: string) {
     const webhookUrl = process.env.N8N_WEBHOOK_URL;
 
     if (!webhookUrl) {
@@ -38,11 +38,9 @@ export class ExportService {
     }
 
     // n8n workflow expects userEmail and userName inside the webhook body
-    const payload = {
+    const payload: any = {
       message: 'Export backlog',
-      // keep the full list available if needed
       to: toList,
-      // For the n8n workflow's Send Email node it expects the email in body.userEmail
       userEmail: toList[0],
       userName: process.env.N8N_DEFAULT_USER_NAME || 'Usuario',
       subject: process.env.N8N_EMAIL_SUBJECT || 'Backlog export',
@@ -51,6 +49,10 @@ export class ExportService {
         process.env.N8N_EMAIL_BODY ||
         'Se exportó el backlog. Revise el adjunto o el flujo en n8n para continuar.',
     };
+    // Añadir los nuevos parámetros al payload
+    if (column) payload.column = column;
+    if (fields) payload.fields = fields;
+    if (mensaje) payload.mensaje = mensaje;
 
     try {
       const response = await axios.post(webhookUrl, payload, {

@@ -25,9 +25,9 @@
     },
     {
       "parameters": {
-        "functionCode": "// Aplana cada objeto del array para que el CSV quede limpio\nreturn $json.map(item => ({\n  columna: item.columna,\n  _id: item._id,\n  titulo: item.titulo,\n  descripcion: item.descripcion,\n  completada: item.completada,\n  __v: item.__v,\n  fechaCreacion: item.fechaCreacion\n}));"
+        "functionCode": "// Filtra y selecciona campos según parámetros recibidos\nconst column = $node['Webhook'].json.body.column;\nconst fields = $node['Webhook'].json.body.fields;\nlet tasks = $json;\nif (column) {\n  tasks = tasks.filter(t => t.columna === column);\n}\nif (fields && Array.isArray(fields) && fields.length > 0) {\n  return tasks.map(item => {\n    const filtered = {};\n    fields.forEach(f => filtered[f] = item[f]);\n    return filtered;\n  });\n}\nreturn tasks;"
       },
-      "name": "Flatten JSON",
+      "name": "Filtrar y Seleccionar Campos",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [650, 300]
@@ -37,14 +37,7 @@
         "mode": "writeFromJson",
         "fileFormat": "csv",
         "putOutputFileInField": "data",
-        "fields": [
-          { "name": "id", "value": "={{$json._id}}" },
-          { "name": "titulo", "value": "={{$json.titulo}}" },
-          { "name": "descripcion", "value": "={{$json.descripcion}}" },
-          { "name": "completada", "value": "={{$json.completada}}" },
-          { "name": "columna", "value": "={{$json.columna}}" },
-          { "name": "fechaCreacion", "value": "={{$json.fechaCreacion}}" }
-        ],
+        "fields": [],
         "fileName": "backlog.csv",
         "headerRow": true
       },
@@ -58,7 +51,7 @@
         "fromEmail": "noreply@kanban-app.com",
         "toEmail": "={{$node[\"Webhook\"].json[\"body\"][\"userEmail\"]}}",
         "subject": "📊 Exportación de Tareas - Tablero Kanban",
-        "text": "={{`Hola ${$node[\"Webhook\"].json[\"body\"][\"userName\"]}, aquí tienes el resumen de tu tablero Kanban con el archivo CSV adjunto.`}}",
+        "text": "={{$node[\"Webhook\"].json[\"body\"][\"mensaje\"] ? $node[\"Webhook\"].json[\"body\"][\"mensaje\"] : `Hola ${$node[\"Webhook\"].json[\"body\"][\"userName\"]}, aquí tienes el resumen de tu tablero Kanban con el archivo CSV adjunto.`}}",
         "attachments": [
           {
             "binaryPropertyName": "data",
@@ -80,9 +73,9 @@
       "main": [[{ "node": "Get Tasks", "type": "main", "index": 0 }]]
     },
     "Get Tasks": {
-      "main": [[{ "node": "Flatten JSON", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Filtrar y Seleccionar Campos", "type": "main", "index": 0 }]]
     },
-    "Flatten JSON": {
+    "Filtrar y Seleccionar Campos": {
       "main": [[{ "node": "CSV", "type": "main", "index": 0 }]]
     },
     "CSV": { "main": [[{ "node": "Send Email", "type": "main", "index": 0 }]] }

@@ -14,7 +14,7 @@ export class ExportController {
    */
   @Post('backlog')
   async exportBacklog(
-    @Body() body: { to?: string | string[] } = {},
+    @Body() body: { to?: string | string[], column?: string, fields?: string[], mensaje?: string } = {},
     @Res() res,
   ) {
     // Normalize recipients
@@ -30,7 +30,8 @@ export class ExportController {
       }
     }
 
-    const result = await this.exportService.triggerExport(recipients);
+    // Pasar los nuevos parámetros al servicio
+    const result = await this.exportService.triggerExport(recipients, body.column, body.fields, body.mensaje);
     return res.status(HttpStatus.OK).json(result);
   }
 }
