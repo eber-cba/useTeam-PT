@@ -11,6 +11,6 @@ import { Tarea, TareaSchema } from './tareas.schema';
   ],
   controllers: [TareasController],
   providers: [TareasService, TareasGateway],
-  exports: [TareasService],
+  exports: [TareasService, TareasGateway],
 })
 export class TareasModule {}

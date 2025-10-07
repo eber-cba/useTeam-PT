@@ -3,7 +3,7 @@ import { useKanban } from "../../context/KanbanContext";
 import { useAuth } from "../../context/AuthContext";
 
 export default function TaskForm({ onClose, existingTask = null }) {
-  const { addTask, updateTask } = useKanban();
+  const { addTask, updateTask, columns } = useKanban();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     titulo: "",
@@ -135,9 +135,17 @@ export default function TaskForm({ onClose, existingTask = null }) {
                 value={formData.columna}
                 onChange={handleChange}
               >
-                <option value="Por hacer">Por hacer</option>
-                <option value="En progreso">En progreso</option>
-                <option value="Hecho">Hecho</option>
+                {columns && columns.length
+                  ? columns.map((c) => (
+                      <option key={c._id || c.name} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))
+                  : ["Por hacer", "En progreso", "Hecho"].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
               </select>
             </div>
 

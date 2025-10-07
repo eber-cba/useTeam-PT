@@ -159,6 +159,15 @@ export class TareasGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage('column-reordered')
+  async handleColumnReordered(
+    @MessageBody() data: { columns: any[] },
+    @ConnectedSocket() client: Socket,
+  ) {
+    // Reenvía el nuevo orden a todos los clientes menos el que lo envió
+    client.to('kanban-room').emit('column-reordered', { columns: data.columns });
+  }
+
   // Método para emitir actualizaciones desde el servicio
   emitTaskUpdate(event: string, data: any) {
     this.server.to('kanban-room').emit(event, data);

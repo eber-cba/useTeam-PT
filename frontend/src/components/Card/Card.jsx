@@ -26,14 +26,14 @@ export default function Card({ task }) {
       </p>
       <div style={{ display: "flex", gap: "5px", fontSize: "12px" }}>
         {columns
-          .filter((c) => c !== task.columna)
+          .filter((c) => c.name !== task.columna)
           .map((c) => (
             <button
-              key={c}
-              onClick={() => moveTask(task._id, c)}
+              key={c._id || c.name}
+              onClick={() => moveTask(task._id, c.name)}
               style={btnStyle}
             >
-              → {c}
+              → {c.name}
             </button>
           ))}
       </div>

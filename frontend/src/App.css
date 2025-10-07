@@ -34,6 +34,15 @@
   padding: 0 10px;
 }
 
+.board-header input[placeholder="Nueva columna"] {
+  width: 180px;
+}
+
+.board-header .add-task-btn {
+  padding: 8px 12px;
+  font-size: 0.95rem;
+}
+
 .board-title {
   font-size: 2rem;
   color: #333;
@@ -85,6 +94,37 @@
   padding-bottom: 10px;
   border-bottom: 2px solid #e0e0e0;
   color: #333;
+}
+
+.column-header h3 {
+  display: inline-block;
+  margin: 0;
+}
+
+.column-header .task-count {
+  background: #007bff;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.column-header .edit-col-btn,
+.column-header .delete-col-btn,
+.column-header .drag-handle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  margin-left: 6px;
+  font-size: 0.95rem;
+}
+
+.column-header .edit-col-btn:hover,
+.column-header .delete-col-btn:hover,
+.column-header .drag-handle:hover {
+  transform: scale(1.05);
 }
 
 .task-card {

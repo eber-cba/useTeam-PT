@@ -14,6 +14,8 @@ import { ExportModule } from './export/export.module';
     EmailModule,
     AuthModule,
     TareasModule,
+    // Columns module provides persistent columns for the Kanban
+    require('./columns/columns.module').ColumnsModule,
     NotificacionesModule,
     ExportModule,
   ],
