@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { useDraggable } from "@dnd-kit/core";
 import { useKanban } from "../../context/KanbanContext";
 import { useAuth } from "../../context/AuthContext";
@@ -75,9 +76,12 @@ const Task = ({ task }) => {
       ref={setNodeRef}
       style={style}
       className={`task-card ${isDragging ? "dragging" : ""}`}
-      {...listeners}
-      {...attributes}
-      onDoubleClick={() => setIsEditing(true)}
+      {...(!isEditing ? listeners : {})}
+      {...(!isEditing ? attributes : {})}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        setIsEditing(true);
+      }}
     >
       <div className="task-header">
         <h4 className="task-title">{task.titulo}</h4>
@@ -85,39 +89,80 @@ const Task = ({ task }) => {
           className="priority-indicator"
           style={{ backgroundColor: getPriorityColor(task.prioridad) }}
         />
+        <button
+          className="task-open-btn"
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log("Abrir modal para task", task._id);
+            setIsEditing(true);
+          }}
+          title="Abrir tarea"
+        >
+          ✏️
+        </button>
       </div>
-
       {task.descripcion && (
         <p className="task-description">{task.descripcion}</p>
       )}
-
       {task.createdBy && (
         <div className="task-meta">
-          Creada por: {task.createdBy.name || task.createdBy.email}
+          Creada por:{" "}
+          {task.createdBy.name || task.createdBy.email || task.createdBy.id}
         </div>
       )}
       {task.lastEditedBy && (
         <div className="task-meta">
-          Editada por: {task.lastEditedBy.name || task.lastEditedBy.email} -{" "}
-          {new Date(task.lastEditedAt).toLocaleString()}
+          Editada por:{" "}
+          {task.lastEditedBy.name ||
+            task.lastEditedBy.email ||
+            task.lastEditedBy.id}{" "}
+          -{" "}
+          {task.lastEditedAt
+            ? new Date(task.lastEditedAt).toLocaleString()
+            : ""}
         </div>
       )}
 
       <div className="task-actions">
-        <button className="btn-small" onClick={() => setIsEditing(true)}>
+        <button
+          type="button"
+          className="btn-small"
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log("Editar (botón) modal para task", task._id);
+            setIsEditing(true);
+          }}
+        >
           Editar
         </button>
-        <button className="btn-small btn-danger" onClick={handleDelete}>
+        <button
+          type="button"
+          className="btn-small btn-danger"
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDelete();
+          }}
+        >
           Eliminar
         </button>
       </div>
-
-      {isEditing && (
-        <div className="task-edit-overlay">
-          <TaskForm existingTask={task} onClose={() => setIsEditing(false)} />
-        </div>
-      )}
-
+      {isEditing &&
+        createPortal(
+          <TaskForm
+            existingTask={task}
+            onClose={() => {
+              console.log("Cerrar modal para task", task._id);
+              setIsEditing(false);
+            }}
+          />,
+          document.body
+        )}
       <div className="task-footer">
         <span className="task-priority">{task.prioridad}</span>
         {task.fechaCreacion && (

@@ -27,10 +27,17 @@ export class TareasController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() body: any) {
-    // Attach creator info from JWT if available
-    const creator = body.createdBy || null;
-    const saved = await this.tareasService.create(body);
+  async create(@Body() body: any, @Request() req: any) {
+    // Use authenticated user as creator when available
+    const creator = req.user
+      ? {
+          id: req.user.id || req.user._id,
+          name: req.user.name,
+          email: req.user.email,
+        }
+      : body.createdBy || null;
+    const payload = { ...body, createdBy: creator };
+    const saved = await this.tareasService.create(payload);
     // Emitir evento de tarea creada para sincronizar en tiempo real
     try {
       this.tareasGateway.emitTaskUpdate('task-added', {
@@ -49,9 +56,16 @@ export class TareasController {
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
-  update(@Param('id') id: string, @Body() body: any) {
-    // Ensure lastEditedBy can be tracked
-    return this.tareasService.update(id, body);
+  update(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    const editor = req.user
+      ? {
+          id: req.user.id || req.user._id,
+          name: req.user.name,
+          email: req.user.email,
+        }
+      : body.lastEditedBy || null;
+    const payload = { ...body, lastEditedBy: editor };
+    return this.tareasService.update(id, payload);
   }
 
   @UseGuards(JwtAuthGuard)

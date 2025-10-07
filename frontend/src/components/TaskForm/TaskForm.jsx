@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useKanban } from "../../context/KanbanContext";
 import { useAuth } from "../../context/AuthContext";
 
@@ -22,6 +22,22 @@ export default function TaskForm({ onClose, existingTask = null }) {
       });
     }
   }, [existingTask]);
+
+  const titleRef = useRef(null);
+
+  useEffect(() => {
+    // autofocus title input when shown
+    if (titleRef.current) {
+      titleRef.current.focus();
+      titleRef.current.select && titleRef.current.select();
+    }
+
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -68,9 +84,14 @@ export default function TaskForm({ onClose, existingTask = null }) {
     });
   };
 
+  const handleOverlayClick = (e) => {
+    // if clicked directly on overlay (not the form), close
+    if (e.target.classList.contains("task-form-overlay")) onClose();
+  };
+
   return (
-    <div className="task-form-overlay">
-      <div className="task-form">
+    <div className="task-form-overlay" onMouseDown={handleOverlayClick}>
+      <div className="task-form" onMouseDown={(e) => e.stopPropagation()}>
         <div className="task-form-header">
           <h3>{existingTask ? "Editar Tarea" : "Nueva Tarea"}</h3>
           <button className="close-btn" onClick={onClose}>
@@ -87,6 +108,7 @@ export default function TaskForm({ onClose, existingTask = null }) {
               name="titulo"
               value={formData.titulo}
               onChange={handleChange}
+              ref={titleRef}
               placeholder="Ingresa el título de la tarea"
               required
             />

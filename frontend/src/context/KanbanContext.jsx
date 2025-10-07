@@ -18,7 +18,10 @@ export const KanbanProvider = ({ children }) => {
   useEffect(() => {
     fetch("http://localhost:3000/api/tareas")
       .then((res) => res.json())
-      .then((data) => setTasks(data))
+      .then((data) => {
+        console.log("Tareas cargadas:", data);
+        setTasks(data);
+      })
       .catch((err) => {
         console.error(err);
         try {
@@ -108,7 +111,13 @@ export const KanbanProvider = ({ children }) => {
       headers,
       body: JSON.stringify({ columna: newColumna }),
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(errBody.message || `HTTP ${res.status}`);
+        }
+        return res.json();
+      })
       .then((updated) => {
         setTasks((prev) =>
           prev.map((t) => (t._id === updated._id ? updated : t))
@@ -124,11 +133,7 @@ export const KanbanProvider = ({ children }) => {
       .catch((err) => {
         console.error("Error moviendo tarea:", err);
         try {
-          addToast({
-            title: "Error",
-            description: "No se pudo mover la tarea.",
-            type: "error",
-          });
+          addToast({ title: "Error", description: err.message, type: "error" });
         } catch (e) {}
       });
   };
@@ -144,7 +149,13 @@ export const KanbanProvider = ({ children }) => {
       headers,
       body: JSON.stringify(newTask),
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(errBody.message || `HTTP ${res.status}`);
+        }
+        return res.json();
+      })
       .then((saved) => {
         // Reemplazar la tarea temporal por la guardada usando clientTempId si existe
         setTasks((prev) => {
@@ -172,11 +183,7 @@ export const KanbanProvider = ({ children }) => {
       .catch((err) => {
         console.error("Error guardando tarea:", err);
         try {
-          addToast({
-            title: "Error",
-            description: "No se pudo guardar la tarea en el servidor.",
-            type: "error",
-          });
+          addToast({ title: "Error", description: err.message, type: "error" });
         } catch (e) {}
         // Fallback: añadir localmente
         setTasks((prev) => [...prev, newTask]);
@@ -198,7 +205,13 @@ export const KanbanProvider = ({ children }) => {
       headers,
       body: JSON.stringify(updates),
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(errBody.message || `HTTP ${res.status}`);
+        }
+        return res.json();
+      })
       .then((updated) => {
         setTasks((prev) =>
           prev.map((t) => (t._id === updated._id ? updated : t))
@@ -214,11 +227,7 @@ export const KanbanProvider = ({ children }) => {
       .catch((err) => {
         console.error("Error actualizando tarea:", err);
         try {
-          addToast({
-            title: "Error",
-            description: "No se pudo actualizar la tarea.",
-            type: "error",
-          });
+          addToast({ title: "Error", description: err.message, type: "error" });
         } catch (e) {}
       });
   };
@@ -232,8 +241,11 @@ export const KanbanProvider = ({ children }) => {
       method: "DELETE",
       headers,
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Error eliminando tarea");
+      .then(async (res) => {
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(errBody.message || `HTTP ${res.status}`);
+        }
         if (socket && isConnected) {
           socket.emit("task-deleted", {
             taskId,
@@ -244,11 +256,7 @@ export const KanbanProvider = ({ children }) => {
       .catch((err) => {
         console.error("Error eliminando tarea:", err);
         try {
-          addToast({
-            title: "Error",
-            description: "No se pudo eliminar la tarea.",
-            type: "error",
-          });
+          addToast({ title: "Error", description: err.message, type: "error" });
         } catch (e) {}
       });
   };

@@ -90,7 +90,7 @@
 .task-card {
   background: #fff;
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: 14px;
   padding: 15px;
   margin-bottom: 10px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -129,11 +129,23 @@
 }
 
 .priority-indicator {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   margin-left: 8px;
   flex-shrink: 0;
+}
+
+.task-open-btn {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.task-open-btn:hover {
+  transform: scale(1.05);
 }
 
 .task-footer {
@@ -229,7 +241,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 2147483647; /* ensure it's above any drag overlay */
+  pointer-events: auto !important;
+}
+
+/* If @dnd-kit or other drag overlay sets a high z-index, lower it so modal stays interactable */
+.dnd-kit-drag-overlay,
+.dnd-kit-DragOverlay,
+.drag-overlay {
+  z-index: 99998 !important;
+  pointer-events: none !important;
 }
 
 .task-form {
