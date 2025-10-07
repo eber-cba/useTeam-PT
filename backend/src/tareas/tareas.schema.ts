@@ -11,6 +11,12 @@ export class Tarea extends Document {
 
   @Prop({ default: false })
   completada: boolean;
+
+  @Prop({ default: 'Por hacer' })
+  columna: string;
+
+  @Prop({ default: () => new Date() })
+  fechaCreacion: Date;
 }
 
 export const TareaSchema = SchemaFactory.createForClass(Tarea);

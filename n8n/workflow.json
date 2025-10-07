@@ -1,0 +1,87 @@
+{
+  "name": "Export Kanban Backlog",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kanban-export",
+        "responseMode": "lastNode"
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "GET",
+        "url": "http://host.docker.internal:3000/api/tareas",
+        "responseFormat": "json"
+      },
+      "name": "Get Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Aplana cada objeto del array para que el CSV quede limpio\nreturn $json.map(item => ({\n  columna: item.columna,\n  _id: item._id,\n  titulo: item.titulo,\n  descripcion: item.descripcion,\n  completada: item.completada,\n  __v: item.__v,\n  fechaCreacion: item.fechaCreacion\n}));"
+      },
+      "name": "Flatten JSON",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "mode": "writeFromJson",
+        "fileFormat": "csv",
+        "putOutputFileInField": "data",
+        "fields": [
+          { "name": "id", "value": "={{$json._id}}" },
+          { "name": "titulo", "value": "={{$json.titulo}}" },
+          { "name": "descripcion", "value": "={{$json.descripcion}}" },
+          { "name": "completada", "value": "={{$json.completada}}" },
+          { "name": "columna", "value": "={{$json.columna}}" },
+          { "name": "fechaCreacion", "value": "={{$json.fechaCreacion}}" }
+        ],
+        "fileName": "backlog.csv",
+        "headerRow": true
+      },
+      "name": "CSV",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 1,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@example.com",
+        "toEmail": "ebercoronel29@gmail.com",
+        "subject": "Backlog Export Kanban",
+        "text": "Adjunto el backlog exportado.",
+        "attachments": [
+          { "binaryPropertyName": "data", "fileName": "backlog.csv" }
+        ]
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1000, 300],
+      "credentials": {
+        "smtp": { "name": "Mailtrap" }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Get Tasks", "type": "main", "index": 0 }]]
+    },
+    "Get Tasks": {
+      "main": [[{ "node": "Flatten JSON", "type": "main", "index": 0 }]]
+    },
+    "Flatten JSON": {
+      "main": [[{ "node": "CSV", "type": "main", "index": 0 }]]
+    },
+    "CSV": { "main": [[{ "node": "Send Email", "type": "main", "index": 0 }]] }
+  }
+}
