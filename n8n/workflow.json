@@ -55,12 +55,15 @@
     },
     {
       "parameters": {
-        "fromEmail": "noreply@example.com",
-        "toEmail": "ebercoronel29@gmail.com",
-        "subject": "Backlog Export Kanban",
-        "text": "Adjunto el backlog exportado.",
+        "fromEmail": "noreply@kanban-app.com",
+        "toEmail": "={{$node[\"Webhook\"].json[\"body\"][\"userEmail\"]}}",
+        "subject": "📊 Exportación de Tareas - Tablero Kanban",
+        "text": "={{`Hola ${$node[\"Webhook\"].json[\"body\"][\"userName\"]}, aquí tienes el resumen de tu tablero Kanban con el archivo CSV adjunto.`}}",
         "attachments": [
-          { "binaryPropertyName": "data", "fileName": "backlog.csv" }
+          {
+            "binaryPropertyName": "data",
+            "fileName": "kanban-tareas-{{$now.format('YYYY-MM-DD')}}.csv"
+          }
         ]
       },
       "name": "Send Email",

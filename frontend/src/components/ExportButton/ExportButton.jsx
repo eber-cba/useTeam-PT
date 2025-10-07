@@ -1,20 +1,45 @@
-import React from "react";
+import React, { useState } from "react";
 import { useKanban } from "../../context/KanbanContext";
+import { useAuth } from "../../context/AuthContext";
 
 export default function ExportButton() {
   const { tasks } = useKanban();
+  const { getAuthHeaders, user, isAuthenticated } = useAuth();
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
+    if (!user || !user.email) {
+      alert("Debes iniciar sesión para exportar por email.");
+      return;
+    }
+
+    setIsExporting(true);
     try {
-      await fetch("http://localhost:3000/api/export/backlog", {
+      const response = await fetch("http://localhost:3000/api/export/backlog", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tasks }),
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ to: user.email, userName: user.name }),
       });
-      alert("Exportación solicitada. Revisa tu email.");
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || "Error en la exportación");
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(
+          "🚀 Exportación procesada por n8n. Revisa tu email para descargar el CSV adjunto."
+        );
+      } else {
+        alert("Error al exportar: " + (result.error || JSON.stringify(result)));
+      }
     } catch (err) {
       console.error(err);
-      alert("Error al exportar el backlog");
+      alert("Error al exportar el backlog: " + err.message);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -29,8 +54,15 @@ export default function ExportButton() {
   };
 
   return (
-    <button onClick={handleExport} style={btnStyle}>
-      Exportar Backlog
+    <button
+      onClick={handleExport}
+      style={btnStyle}
+      disabled={isExporting || !isAuthenticated()}
+      title={
+        !isAuthenticated() ? "Inicia sesión para poder exportar" : undefined
+      }
+    >
+      {isExporting ? "🚀 Procesando con n8n..." : "📧 Exportar CSV por Email"}
     </button>
   );
 }

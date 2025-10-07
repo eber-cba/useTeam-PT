@@ -1,8 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
+import { join } from 'path';
 
+// Load .env from backend folder first, then fallback to repository root .env
 dotenv.config();
+// If key like PORT is still undefined, try loading repo root .env
+if (!process.env.PORT) {
+  dotenv.config({ path: join(__dirname, '..', '..', '.env') });
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
