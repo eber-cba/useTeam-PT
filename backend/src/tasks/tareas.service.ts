@@ -17,14 +17,18 @@ export class TareasService {
     if (data._id) delete data._id;
     if (data.clientTempId) delete data.clientTempId;
 
+    // Attach metadata if provided
+    if (createDto.createdBy) data.createdBy = createDto.createdBy;
+
     const created = new this.tareaModel(data);
     return created.save();
   }
 
   update(id: string, updateDto: Partial<Tarea>) {
-    return this.tareaModel
-      .findByIdAndUpdate(id, updateDto, { new: true })
-      .exec();
+    const data: any = { ...updateDto };
+    if (updateDto.lastEditedBy) data.lastEditedBy = updateDto.lastEditedBy;
+    data.lastEditedAt = new Date();
+    return this.tareaModel.findByIdAndUpdate(id, data, { new: true }).exec();
   }
 
   delete(id: string) {

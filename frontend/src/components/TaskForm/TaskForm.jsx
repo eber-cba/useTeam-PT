@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useKanban } from "../../context/KanbanContext";
+import { useAuth } from "../../context/AuthContext";
 
-export default function TaskForm({ onClose }) {
-  const { addTask } = useKanban();
+export default function TaskForm({ onClose, existingTask = null }) {
+  const { addTask, updateTask } = useKanban();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     titulo: "",
     descripcion: "",
@@ -10,9 +12,33 @@ export default function TaskForm({ onClose }) {
     prioridad: "media",
   });
 
+  useEffect(() => {
+    if (existingTask) {
+      setFormData({
+        titulo: existingTask.titulo || "",
+        descripcion: existingTask.descripcion || "",
+        columna: existingTask.columna || "Por hacer",
+        prioridad: existingTask.prioridad || "media",
+      });
+    }
+  }, [existingTask]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.titulo.trim()) return;
+
+    if (existingTask) {
+      // Update existing task
+      updateTask(existingTask._id, {
+        ...formData,
+        lastEditedBy: user
+          ? { id: user.id || user._id, name: user.name, email: user.email }
+          : null,
+      });
+      onClose();
+      return;
+    }
+
     const tempId = `temp-${Date.now()}`;
     const newTask = {
       ...formData,
@@ -20,6 +46,9 @@ export default function TaskForm({ onClose }) {
       clientTempId: tempId,
       fechaCreacion: new Date().toISOString(),
       estado: "activa",
+      createdBy: user
+        ? { id: user.id || user._id, name: user.name, email: user.email }
+        : null,
     };
 
     addTask(newTask);
@@ -43,7 +72,7 @@ export default function TaskForm({ onClose }) {
     <div className="task-form-overlay">
       <div className="task-form">
         <div className="task-form-header">
-          <h3>Nueva Tarea</h3>
+          <h3>{existingTask ? "Editar Tarea" : "Nueva Tarea"}</h3>
           <button className="close-btn" onClick={onClose}>
             ×
           </button>
@@ -110,7 +139,7 @@ export default function TaskForm({ onClose }) {
               Cancelar
             </button>
             <button type="submit" className="btn-primary">
-              Crear Tarea
+              {existingTask ? "Guardar" : "Crear Tarea"}
             </button>
           </div>
         </form>

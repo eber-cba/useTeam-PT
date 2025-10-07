@@ -1,9 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { useKanban } from "../../context/KanbanContext";
+import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
+import TaskForm from "../TaskForm/TaskForm";
 
 const Task = ({ task }) => {
-  const { moveTask } = useKanban();
+  const { moveTask, updateTask, deleteTask } = useKanban();
+  const { user } = useAuth();
+  const { addToast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -30,6 +36,40 @@ const Task = ({ task }) => {
     }
   };
 
+  const handleDelete = () => {
+    if (!task._id || String(task._id).startsWith("temp-")) {
+      addToast({
+        title: "Error",
+        description: "No se puede eliminar una tarea temporal.",
+        type: "warning",
+      });
+      return;
+    }
+    if (confirm("¿Seguro que deseas eliminar esta tarea?")) {
+      deleteTask(task._id);
+      addToast({
+        title: "Eliminada",
+        description: "Tarea eliminada.",
+        type: "success",
+      });
+    }
+  };
+
+  const handleEditSave = (updated) => {
+    updateTask(task._id, {
+      ...updated,
+      lastEditedBy: user
+        ? { id: user.id, name: user.name, email: user.email }
+        : null,
+    });
+    setIsEditing(false);
+    addToast({
+      title: "Guardada",
+      description: "Tarea actualizada.",
+      type: "success",
+    });
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -37,6 +77,7 @@ const Task = ({ task }) => {
       className={`task-card ${isDragging ? "dragging" : ""}`}
       {...listeners}
       {...attributes}
+      onDoubleClick={() => setIsEditing(true)}
     >
       <div className="task-header">
         <h4 className="task-title">{task.titulo}</h4>
@@ -50,6 +91,33 @@ const Task = ({ task }) => {
         <p className="task-description">{task.descripcion}</p>
       )}
 
+      {task.createdBy && (
+        <div className="task-meta">
+          Creada por: {task.createdBy.name || task.createdBy.email}
+        </div>
+      )}
+      {task.lastEditedBy && (
+        <div className="task-meta">
+          Editada por: {task.lastEditedBy.name || task.lastEditedBy.email} -{" "}
+          {new Date(task.lastEditedAt).toLocaleString()}
+        </div>
+      )}
+
+      <div className="task-actions">
+        <button className="btn-small" onClick={() => setIsEditing(true)}>
+          Editar
+        </button>
+        <button className="btn-small btn-danger" onClick={handleDelete}>
+          Eliminar
+        </button>
+      </div>
+
+      {isEditing && (
+        <div className="task-edit-overlay">
+          <TaskForm existingTask={task} onClose={() => setIsEditing(false)} />
+        </div>
+      )}
+
       <div className="task-footer">
         <span className="task-priority">{task.prioridad}</span>
         {task.fechaCreacion && (
@@ -61,5 +129,7 @@ const Task = ({ task }) => {
     </div>
   );
 };
+
+// Inline editor removed; TaskForm modal is used for editing instead.
 
 export default Task;

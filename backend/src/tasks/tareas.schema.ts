@@ -17,6 +17,15 @@ export class Tarea extends Document {
 
   @Prop({ default: () => new Date() })
   fechaCreacion: Date;
+
+  @Prop({ type: Object })
+  createdBy: any;
+
+  @Prop({ type: Object })
+  lastEditedBy: any;
+
+  @Prop({ type: Date })
+  lastEditedAt: Date;
 }
 
 export const TareaSchema = SchemaFactory.createForClass(Tarea);

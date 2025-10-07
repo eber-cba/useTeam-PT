@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 
 export const useSocket = (url = "http://localhost:3000") => {
   const socketRef = useRef(null);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     // Crear conexión WebSocket
@@ -10,6 +11,8 @@ export const useSocket = (url = "http://localhost:3000") => {
       transports: ["websocket", "polling"],
       autoConnect: true,
     });
+
+    setSocket(socketRef.current);
 
     // Eventos de conexión
     socketRef.current.on("connect", () => {
@@ -36,8 +39,9 @@ export const useSocket = (url = "http://localhost:3000") => {
         socketRef.current.emit("leave-kanban");
         socketRef.current.disconnect();
       }
+      setSocket(null);
     };
   }, [url]);
 
-  return socketRef.current;
+  return socket;
 };
