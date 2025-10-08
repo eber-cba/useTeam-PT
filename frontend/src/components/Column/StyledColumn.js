@@ -181,10 +181,31 @@ export const ColumnContainer = styled(motion.div).withConfig({
   }
 
   @media (max-width: ${(props) => props.theme.breakpoints.tablet}) {
-    min-width: 100%;
-    max-width: 100%;
+    min-width: 95vw;
+    max-width: 100vw;
     margin-bottom: ${(props) => props.theme.spacing.lg};
     transform: none !important;
+    padding: ${(props) => props.theme.spacing.md};
+  }
+
+  @media (max-width: 480px) {
+    min-width: 99vw;
+    max-width: 100vw;
+    border-radius: 0;
+    padding: ${(props) => props.theme.spacing.sm};
+  }
+
+  /* Placeholder para columna fantasma */
+  &.ghost-placeholder {
+    opacity: 0.4;
+    border: 2px dashed #667eea;
+    background: repeating-linear-gradient(
+      135deg,
+      #e0e7ff 0 10px,
+      #fff 10px 20px
+    );
+    box-shadow: none;
+    pointer-events: none;
   }
 
   /* Efecto de profundidad en dispositivos móviles */
@@ -233,11 +254,19 @@ export const ColumnTitle = styled(motion.h3).withConfig({
   border-radius: 16px;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: pre-line;
   min-width: 0;
   z-index: 2;
+  display: block;
+  word-break: break-word;
+  max-width: 100%;
+
+  @media (max-width: 600px) {
+    font-size: 1.1rem;
+    padding: 10px 8px;
+  }
 
   &::before {
     content: "";
@@ -612,96 +641,45 @@ export const EmptyColumnMessage = styled(motion.div)`
 
 export const DragHandle = styled(motion.div)`
   cursor: grab;
-  padding: 12px;
+  padding: 16px;
   border-radius: 16px;
-  color: ${(props) => props.theme.colors.textSecondary};
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  color: ${(props) => props.theme.colors.secondary};
   background: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(248, 250, 252, 0.1) 100%
+    rgba(236, 72, 153, 0.18) 0%,
+    rgba(219, 39, 119, 0.12) 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(15px);
-  position: relative;
-  overflow: hidden;
-  min-width: 44px;
-  min-height: 44px;
+  border: 2px solid rgba(236, 72, 153, 0.18);
+  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.08);
+  min-width: 48px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: radial-gradient(
-      circle,
-      rgba(236, 72, 153, 0.2) 0%,
-      transparent 70%
-    );
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-  }
+  font-size: 1.5rem;
+  margin-right: 8px;
+  margin-left: 0;
+  transition: all 0.3s;
+  position: relative;
+  z-index: 2;
 
   &:hover {
-    background: linear-gradient(
-      145deg,
-      rgba(236, 72, 153, 0.2) 0%,
-      rgba(219, 39, 119, 0.15) 100%
-    );
-    color: ${(props) => props.theme.colors.secondary};
-    transform: translateY(-4px) scale(1.1) rotate(15deg);
-    box-shadow: 0 12px 30px rgba(236, 72, 153, 0.25),
-      0 6px 15px rgba(236, 72, 153, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    border-color: rgba(236, 72, 153, 0.4);
-
-    &::before {
-      opacity: 0.1;
-    }
-
-    &::after {
-      width: 100px;
-      height: 100px;
-    }
+    background: linear-gradient(145deg, #ec4899 0%, #db2777 100%);
+    color: #fff;
+    transform: scale(1.12) rotate(10deg);
+    border-color: #ec4899;
+    box-shadow: 0 6px 18px rgba(236, 72, 153, 0.18);
   }
 
   &:active {
     cursor: grabbing;
-    transform: translateY(-2px) scale(1.05);
+    transform: scale(1.05);
   }
 
-  /* Efecto de ondas al arrastrar */
-  &:active {
-    animation: dragWave 0.3s ease-out;
-  }
-
-  @keyframes dragWave {
-    0% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.1);
-    }
-    100% {
-      transform: scale(1);
-    }
+  @media (max-width: 600px) {
+    min-width: 40px;
+    min-height: 40px;
+    font-size: 1.2rem;
+    padding: 10px;
   }
 `;

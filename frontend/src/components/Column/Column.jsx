@@ -57,11 +57,19 @@ export default function Column({ column, children }) {
     setNodeRef: setSortableRef,
     transform,
     transition,
+    isDragging,
+    isSorting,
+    over,
   } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    opacity: isDragging ? 0.7 : 1,
+    zIndex: isDragging ? 1000 : undefined,
+    boxShadow: isDragging
+      ? "0 35px 70px rgba(0,0,0,0.18), 0 18px 35px rgba(0,0,0,0.12)"
+      : undefined,
   };
 
   const onSave = async () => {
@@ -103,6 +111,7 @@ export default function Column({ column, children }) {
       }}
       style={style}
       isOver={isOver}
+      data-dragging={isDragging ? "true" : undefined}
       {...attributes}
       initial={{ opacity: 0, y: 30, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}

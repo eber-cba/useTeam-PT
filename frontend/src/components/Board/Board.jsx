@@ -51,27 +51,41 @@ export default function Board() {
   const [activeTask, setActiveTask] = useState(null);
   const [showColumnModal, setShowColumnModal] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
+  const [activeColumnId, setActiveColumnId] = useState(null);
+  const [overColumnId, setOverColumnId] = useState(null);
 
   const handleDragStart = (event) => {
     const { active } = event;
+    // Si es columna, guardar el id
+    const columnIds = columns.map((c) => c._id || c.name);
+    if (columnIds.includes(active.id)) {
+      setActiveColumnId(active.id);
+    }
     // If active id is a task id, set activeTask to show overlay
     const task = tasks.find((t) => t._id === active.id);
     setActiveTask(task || null);
   };
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    setActiveTask(null);
-    if (!over) return;
+  const handleDragOver = (event) => {
+    const { over } = event;
+    if (over) {
+      setOverColumnId(over.id);
+    } else {
+      setOverColumnId(null);
+    }
+  };
 
-    const activeId = active.id;
-    const overId = over.id;
+  const handleDragEnd = (event) => {
+    setActiveColumnId(null);
+    setOverColumnId(null);
+    setActiveTask(null);
+    const { active, over } = event;
 
     // If dragging a column (activeId matches a column id), reorder columns
     const columnIds = columns.map((c) => c._id || c.name);
-    if (columnIds.includes(activeId) && columnIds.includes(overId)) {
-      const oldIndex = columnIds.indexOf(activeId);
-      const newIndex = columnIds.indexOf(overId);
+    if (columnIds.includes(active.id) && columnIds.includes(over.id)) {
+      const oldIndex = columnIds.indexOf(active.id);
+      const newIndex = columnIds.indexOf(over.id);
       if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
         const newCols = arrayMove(columns, oldIndex, newIndex);
         console.log(
@@ -84,8 +98,8 @@ export default function Board() {
     }
 
     // Otherwise, it's a task move: over.id is the column id/name
-    const taskId = activeId;
-    const columnId = overId;
+    const taskId = active.id;
+    const columnId = over.id;
     const task = tasks.find((t) => t._id === taskId);
 
     // Find the column by ID or name to get the correct column name
@@ -285,6 +299,7 @@ export default function Board() {
       <DndContext
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
         <SortableContext
@@ -309,22 +324,59 @@ export default function Board() {
                 </p>
               </EmptyState>
             ) : (
-              columns.map((column, index) => (
-                <Column
-                  key={column._id || column.name}
-                  column={column}
-                  index={index}
-                >
-                  <SortableContext
-                    items={getTasksForColumn(column).map((task) => task._id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {getTasksForColumn(column).map((task) => (
-                      <Task key={task._id} task={task} />
-                    ))}
-                  </SortableContext>
-                </Column>
-              ))
+              columns.map((column, index) => {
+                const colId = column._id || column.name;
+                // Insertar placeholder visual si corresponde
+                if (
+                  activeColumnId &&
+                  overColumnId === colId &&
+                  activeColumnId !== overColumnId
+                ) {
+                  return [
+                    <div
+                      key={"ghost-" + colId}
+                      className="ghost-placeholder"
+                      style={{
+                        minWidth: 340,
+                        maxWidth: 400,
+                        minHeight: 480,
+                        margin: 8,
+                        borderRadius: 28,
+                        border: "2px dashed #667eea",
+                        background:
+                          "repeating-linear-gradient(135deg, #e0e7ff 0 10px, #fff 10px 20px)",
+                        opacity: 0.4,
+                        pointerEvents: "none",
+                        transition: "all 0.2s",
+                      }}
+                    />, // Placeholder
+                    <Column key={colId} column={column} index={index}>
+                      <SortableContext
+                        items={getTasksForColumn(column).map(
+                          (task) => task._id
+                        )}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {getTasksForColumn(column).map((task) => (
+                          <Task key={task._id} task={task} />
+                        ))}
+                      </SortableContext>
+                    </Column>,
+                  ];
+                }
+                return (
+                  <Column key={colId} column={column} index={index}>
+                    <SortableContext
+                      items={getTasksForColumn(column).map((task) => task._id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {getTasksForColumn(column).map((task) => (
+                        <Task key={task._id} task={task} />
+                      ))}
+                    </SortableContext>
+                  </Column>
+                );
+              })
             )}
           </ColumnsContainer>
         </SortableContext>

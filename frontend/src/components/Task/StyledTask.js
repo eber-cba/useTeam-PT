@@ -234,8 +234,21 @@ export const TaskTitle = styled(motion.h4)`
   flex: 1;
   line-height: 1.4;
   word-break: break-word;
+  white-space: pre-line;
+  overflow: visible;
+  text-overflow: unset;
+  max-width: 100%;
+  min-width: 0;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
+  display: block;
+
+  @media (max-width: 600px) {
+    font-size: 1.05rem;
+    line-height: 1.3;
+    word-break: break-word;
+    max-width: 100%;
+  }
 
   &::before {
     content: "";
