@@ -80,6 +80,7 @@ export const KanbanProvider = ({ children }) => {
         // 2. Cargar tareas y mapear columnas
         const tasksRes = await fetch("http://localhost:3000/api/tareas");
         console.log("📡 Respuesta de /api/tareas:", tasksRes.status);
+        console.log('[KanbanContext] Respuesta de /api/tareas:', tasksRes);
 
         if (tasksRes.ok) {
           const tasksData = await tasksRes.json();
@@ -106,6 +107,7 @@ export const KanbanProvider = ({ children }) => {
 
         setIsInitialLoadComplete(true);
         console.log("🎯 Carga inicial completada");
+        console.log("[KanbanContext] Estado inicial de tasks:", tasks);
       } catch (error) {
         console.error("❌ Error cargando datos iniciales:", error);
         setIsInitialLoadComplete(true);

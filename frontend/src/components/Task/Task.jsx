@@ -45,6 +45,7 @@ import {
 } from "./StyledTask";
 
 const Task = ({ task }) => {
+  console.log('[Task] Renderizando tarea:', task);
   const { moveTask, updateTask, deleteTask } = useKanban();
   const { user } = useAuth();
   const { addToast } = useToast();

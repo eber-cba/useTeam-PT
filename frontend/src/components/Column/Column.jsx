@@ -36,6 +36,7 @@ import {
 
 export default function Column({ column, children }) {
   const { removeColumn, updateColumn, tasks: allTasks, addTask } = useKanban();
+  console.log("[Column] children recibidos:", children);
 
   const getTasksForColumn = () => {
     const columnName = column && column.name ? column.name : "";
