@@ -117,7 +117,9 @@ export default function Board() {
   const getTasksForColumn = (column) => {
     const name = column && column.name ? column.name : column;
     const columnTasks = tasks
-      .filter((task) => task.columna === name)
+      .filter((task) =>
+        task.columna && name && task.columna.toLowerCase() === name.toLowerCase()
+      )
       .sort((a, b) => (a.orden || 0) - (b.orden || 0));
 
     console.log(

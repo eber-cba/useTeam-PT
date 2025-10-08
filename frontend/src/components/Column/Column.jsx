@@ -42,7 +42,9 @@ export default function Column({ column, children }) {
     const columnId = column && column._id ? column._id : "";
     return (allTasks || [])
       .filter(
-        (task) => task.columna === columnName || task.columna === columnId
+        (task) =>
+          (task.columna && columnName && task.columna.toLowerCase() === columnName.toLowerCase()) ||
+          (task.columna && columnId && task.columna.toLowerCase() === columnId.toLowerCase())
       )
       .sort((a, b) => (a.orden || 0) - (b.orden || 0));
   };
