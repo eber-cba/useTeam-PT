@@ -186,17 +186,57 @@ export const GlobalStyle = createGlobalStyle`
     width: 100%;
     height: 100%;
     background: 
-      radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+      radial-gradient(circle at 15% 85%, rgba(102, 126, 234, 0.4) 0%, transparent 60%),
+      radial-gradient(circle at 85% 15%, rgba(240, 147, 251, 0.35) 0%, transparent 55%),
+      radial-gradient(circle at 45% 45%, rgba(79, 172, 254, 0.25) 0%, transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(236, 72, 153, 0.2) 0%, transparent 45%),
+      radial-gradient(circle at 25% 25%, rgba(118, 75, 162, 0.3) 0%, transparent 40%);
     z-index: -1;
-    animation: backgroundShift 20s ease-in-out infinite;
+    animation: backgroundShift 25s ease-in-out infinite;
+  }
+  
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+      radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 30%),
+      radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 25%);
+    z-index: -1;
+    animation: backgroundShimmer 15s ease-in-out infinite;
   }
   
   @keyframes backgroundShift {
-    0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
-    33% { transform: translateX(-20px) translateY(-10px) rotate(1deg); }
-    66% { transform: translateX(10px) translateY(-20px) rotate(-1deg); }
+    0%, 100% { 
+      transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+      filter: hue-rotate(0deg);
+    }
+    25% { 
+      transform: translateX(-30px) translateY(-15px) rotate(2deg) scale(1.05);
+      filter: hue-rotate(15deg);
+    }
+    50% { 
+      transform: translateX(20px) translateY(-25px) rotate(-1deg) scale(0.98);
+      filter: hue-rotate(-10deg);
+    }
+    75% { 
+      transform: translateX(-10px) translateY(20px) rotate(1deg) scale(1.02);
+      filter: hue-rotate(5deg);
+    }
+  }
+
+  @keyframes backgroundShimmer {
+    0%, 100% { 
+      opacity: 0.5;
+      transform: translateX(0) translateY(0);
+    }
+    50% { 
+      opacity: 0.8;
+      transform: translateX(-20px) translateY(-20px);
+    }
   }
   
   /* Headings */
@@ -363,6 +403,26 @@ export const GlobalStyle = createGlobalStyle`
     h3 { font-size: ${theme.fontSizes.xl}; }
   }
   
+  /* Efectos de cursor personalizados para drag and drop */
+  .dragging {
+    cursor: grabbing !important;
+  }
+
+  .draggable {
+    cursor: grab;
+  }
+
+  .draggable:active {
+    cursor: grabbing;
+  }
+
+  /* Efectos de selección mejorados */
+  .drag-preview {
+    opacity: 0.8;
+    transform: rotate(5deg) scale(1.05);
+    transition: all 0.2s ease;
+  }
+
   /* Modo oscuro (preparado para futuras implementaciones) */
   @media (prefers-color-scheme: dark) {
     /* Los estilos de modo oscuro se pueden agregar aquí */

@@ -332,12 +332,44 @@ export default function Board() {
         <DragOverlay>
           {activeTask ? (
             <DragOverlayCard
-              initial={{ scale: 0.8, rotate: 0 }}
-              animate={{ scale: 1, rotate: 5 }}
-              transition={{ duration: 0.2 }}
+              initial={{ scale: 0.8, rotate: 0, opacity: 0 }}
+              animate={{ scale: 1.08, rotate: 12, opacity: 0.98 }}
+              transition={{
+                duration: 0.3,
+                type: "spring",
+                stiffness: 300,
+                damping: 25,
+              }}
+              style={{
+                cursor: "grabbing",
+                userSelect: "none",
+                pointerEvents: "none",
+              }}
             >
               <h4>{activeTask.titulo}</h4>
               <p>{activeTask.descripcion}</p>
+              {activeTask.prioridad && (
+                <span
+                  style={{
+                    display: "inline-block",
+                    padding: "4px 8px",
+                    borderRadius: "8px",
+                    fontSize: "0.7rem",
+                    fontWeight: "600",
+                    textTransform: "uppercase",
+                    background:
+                      activeTask.prioridad === "alta"
+                        ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
+                        : activeTask.prioridad === "media"
+                        ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+                        : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                    color: "white",
+                    marginTop: "8px",
+                  }}
+                >
+                  {activeTask.prioridad}
+                </span>
+              )}
             </DragOverlayCard>
           ) : null}
         </DragOverlay>
