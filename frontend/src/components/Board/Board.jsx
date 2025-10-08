@@ -10,7 +10,6 @@ import Column from "../Column/Column";
 import Task from "../Task/Task";
 import TaskForm from "../TaskForm/TaskForm";
 import { useKanban } from "../../context/KanbanContext";
-import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import {
   BoardContainer,
@@ -21,15 +20,9 @@ import {
   LogoContainer,
   KanbanIcon,
   HeaderTitle,
-  UserBadge,
-  UserAvatar,
-  UserName,
   ActionButtonsContainer,
   ModernActionButton,
   ButtonIcon,
-  ConnectionStatus,
-  StatusDot,
-  StatusText,
   ColumnsContainer,
   DragOverlayCard,
   EmptyState,
@@ -40,6 +33,14 @@ import {
   ModalInput,
   ModalActions,
   ModalButton,
+  BoardStats,
+  StatItem,
+  StatValue,
+  StatLabel,
+  FloatingParticles,
+  BoardBackground,
+  HeaderGlow,
+  AnimatedOrb,
 } from "./StyledBoard";
 
 export default function Board() {
@@ -50,9 +51,7 @@ export default function Board() {
     addColumn,
     reorderColumns,
     deleteAllTasks,
-    isConnected,
   } = useKanban();
-  const { user } = useAuth();
   const { addToast } = useToast();
 
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -130,21 +129,40 @@ export default function Board() {
     }
   };
 
+  // Calcular estadísticas
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(
+    (task) => task.estado === "completada"
+  ).length;
+  const progressPercentage =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
   return (
     <BoardContainer
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
+      <BoardBackground />
+      <FloatingParticles />
+
       <ModernBoardHeader
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
+        <HeaderGlow />
+        <AnimatedOrb />
+
         <HeaderLeft>
           <LogoContainer>
-            <KanbanIcon>📋</KanbanIcon>
-            <HeaderTitle>Kanban Team</HeaderTitle>
+            <KanbanIcon>
+              <div className="icon-inner">📋</div>
+              <div className="icon-glow" />
+            </KanbanIcon>
+            <HeaderTitle>
+              Kanban<span>Flow</span>
+            </HeaderTitle>
           </LogoContainer>
         </HeaderLeft>
 
@@ -153,7 +171,8 @@ export default function Board() {
             <ModernActionButton
               variant="primary"
               onClick={() => setShowColumnModal(true)}
-              className="action-btn"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
             >
               <ButtonIcon>+</ButtonIcon>
               Nueva Columna
@@ -162,7 +181,8 @@ export default function Board() {
             <ModernActionButton
               variant="success"
               onClick={() => setShowTaskForm(true)}
-              className="action-btn"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
             >
               <ButtonIcon>+</ButtonIcon>
               Nueva Tarea
@@ -171,7 +191,8 @@ export default function Board() {
             <ModernActionButton
               variant="warning"
               onClick={deleteAllTasks}
-              className="action-btn"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
             >
               <ButtonIcon>🗑️</ButtonIcon>
               Limpiar Todo
@@ -180,37 +201,43 @@ export default function Board() {
         </HeaderCenter>
 
         <HeaderRight>
-          {user && (
-            <UserBadge>
-              <UserAvatar>
-                {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-              </UserAvatar>
-              <UserName>{user.name || user.email}</UserName>
-            </UserBadge>
-          )}
-          <ConnectionStatus $isConnected={isConnected}>
-            <StatusDot $isConnected={isConnected} />
-            <StatusText>
-              {isConnected ? "Conectado" : "Desconectado"}
-            </StatusText>
-          </ConnectionStatus>
+          <BoardStats>
+            <StatItem>
+              <StatValue>{totalTasks}</StatValue>
+              <StatLabel>Tareas</StatLabel>
+            </StatItem>
+            <StatItem>
+              <StatValue>{columns.length}</StatValue>
+              <StatLabel>Columnas</StatLabel>
+            </StatItem>
+            <StatItem>
+              <StatValue>{progressPercentage}%</StatValue>
+              <StatLabel>Progreso</StatLabel>
+            </StatItem>
+          </BoardStats>
         </HeaderRight>
       </ModernBoardHeader>
 
       {/* Modal para nueva columna */}
       {showColumnModal && (
         <ColumnModal>
-          <ModalOverlay onClick={() => setShowColumnModal(false)} />
+          <ModalOverlay
+            onClick={() => setShowColumnModal(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          />
           <ModalContent
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            initial={{ scale: 0.8, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.8, opacity: 0, y: 20 }}
+            transition={{ duration: 0.3, type: "spring" }}
           >
             <ModalHeader>Crear Nueva Columna</ModalHeader>
             <ModalInput
               autoFocus
               type="text"
-              placeholder="Nombre de la columna"
+              placeholder="¿Cómo se llamará tu columna?"
               value={newColumnName}
               onChange={(e) => setNewColumnName(e.target.value)}
               onKeyDown={(e) => {
@@ -258,11 +285,20 @@ export default function Board() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, delay: 0.7 }}
               >
+                <div className="empty-icon">✨</div>
                 <h3>¡Comienza creando tu primera columna!</h3>
                 <p>
                   Organiza tus tareas en columnas personalizadas para un mejor
                   flujo de trabajo.
                 </p>
+                <ModernActionButton
+                  variant="primary"
+                  onClick={() => setShowColumnModal(true)}
+                  style={{ marginTop: "20px" }}
+                >
+                  <ButtonIcon>+</ButtonIcon>
+                  Crear Primera Columna
+                </ModernActionButton>
               </EmptyState>
             ) : (
               columns.map((column, index) => {

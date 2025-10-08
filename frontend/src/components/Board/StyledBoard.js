@@ -1,3 +1,4 @@
+// StyledBoard.js
 import styled from "styled-components";
 import { motion } from "framer-motion";
 
@@ -25,6 +26,78 @@ export const BoardContainer = styled(motion.div)`
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
+  overflow: hidden;
+`;
+
+export const BoardBackground = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+      circle at 20% 80%,
+      rgba(120, 119, 198, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(255, 119, 198, 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 40% 40%,
+      rgba(120, 219, 255, 0.05) 0%,
+      transparent 50%
+    );
+  pointer-events: none;
+  z-index: 0;
+`;
+
+export const FloatingParticles = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 20%;
+    left: 10%;
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 60%;
+    right: 15%;
+    width: 6px;
+    height: 6px;
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite reverse;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) translateX(0);
+      opacity: 0.3;
+    }
+    50% {
+      transform: translateY(-20px) translateX(10px);
+      opacity: 0.8;
+    }
+  }
 `;
 
 export const ModernBoardHeader = styled(motion.div).withConfig({
@@ -34,36 +107,17 @@ export const ModernBoardHeader = styled(motion.div).withConfig({
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 32px;
-  padding: 20px 32px;
+  padding: 24px 32px;
   margin-bottom: 24px;
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+  backdrop-filter: blur(25px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   position: relative;
   overflow: hidden;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.1),
-      transparent
-    );
-    transition: left 0.6s ease;
-  }
-
-  &:hover::before {
-    left: 100%;
-  }
+  z-index: 2;
 
   @media (max-width: 1024px) {
     grid-template-columns: 1fr;
@@ -73,10 +127,53 @@ export const ModernBoardHeader = styled(motion.div).withConfig({
   }
 `;
 
+export const HeaderGlow = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.1) 0%,
+    rgba(118, 75, 162, 0.05) 50%,
+    rgba(240, 147, 251, 0.08) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.6s ease;
+
+  ${ModernBoardHeader}:hover & {
+    opacity: 1;
+  }
+`;
+
+export const AnimatedOrb = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(
+    circle,
+    rgba(102, 126, 234, 0.2) 0%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.8s ease;
+
+  ${ModernBoardHeader}:hover & {
+    width: 200px;
+    height: 200px;
+  }
+`;
+
 export const HeaderLeft = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  position: relative;
+  z-index: 3;
 
   @media (max-width: 1024px) {
     justify-content: center;
@@ -86,93 +183,121 @@ export const HeaderLeft = styled.div`
 export const HeaderCenter = styled.div`
   display: flex;
   justify-content: center;
+  position: relative;
+  z-index: 3;
 `;
 
 export const HeaderRight = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 16px;
+  position: relative;
+  z-index: 3;
 
   @media (max-width: 1024px) {
     justify-content: center;
-    flex-wrap: wrap;
   }
 `;
 
 export const LogoContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 `;
 
 export const KanbanIcon = styled.div`
-  font-size: 2.5rem;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
-  animation: float 3s ease-in-out infinite;
+  position: relative;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .icon-inner {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    animation: float 3s ease-in-out infinite;
+    position: relative;
+    z-index: 2;
+  }
+
+  .icon-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(
+      circle,
+      rgba(102, 126, 234, 0.4) 0%,
+      transparent 70%
+    );
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.6s ease;
+    animation: pulse 2s ease-in-out infinite;
+  }
 
   @keyframes float {
     0%,
     100% {
-      transform: translateY(0px);
+      transform: translateY(0px) rotate(0deg);
     }
     50% {
-      transform: translateY(-4px);
+      transform: translateY(-8px) rotate(5deg);
+    }
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      width: 0;
+      height: 0;
+      opacity: 0;
+    }
+    50% {
+      width: 80px;
+      height: 80px;
+      opacity: 0.6;
     }
   }
 `;
 
 export const HeaderTitle = styled.h1`
-  font-size: 2rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 50%, #c7d2fe 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
+  position: relative;
+
+  span {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.6s ease;
+    border-radius: 2px;
+  }
+
+  &:hover::after {
+    width: 100%;
+  }
 
   @media (max-width: 768px) {
-    font-size: 1.75rem;
-  }
-`;
-
-export const UserBadge = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-1px);
-  }
-`;
-
-export const UserAvatar = styled.div`
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 0.9rem;
-`;
-
-export const UserName = styled.span`
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
-  font-size: 0.9rem;
-
-  @media (max-width: 480px) {
-    display: none;
+    font-size: 1.8rem;
   }
 `;
 
@@ -188,18 +313,18 @@ export const ActionButtonsContainer = styled.div`
   }
 `;
 
-export const ModernActionButton = styled.button`
+export const ModernActionButton = styled(motion.button)`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 14px 20px;
   border: none;
-  border-radius: 12px;
+  border-radius: 16px;
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backdrop-filter: blur(15px);
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -220,7 +345,8 @@ export const ModernActionButton = styled.button`
   }};
 
   color: white;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 
   &::before {
     content: "";
@@ -240,8 +366,8 @@ export const ModernActionButton = styled.button`
   }
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 
     &::before {
       left: 100%;
@@ -249,7 +375,7 @@ export const ModernActionButton = styled.button`
   }
 
   &:active {
-    transform: translateY(0);
+    transform: translateY(-1px);
   }
 
   &:disabled {
@@ -259,7 +385,7 @@ export const ModernActionButton = styled.button`
   }
 
   @media (max-width: 768px) {
-    padding: 10px 16px;
+    padding: 12px 16px;
     font-size: 0.85rem;
   }
 `;
@@ -271,57 +397,55 @@ export const ButtonIcon = styled.span`
   transition: transform 0.3s ease;
 
   ${ModernActionButton}:hover & {
-    transform: scale(1.1);
+    transform: scale(1.1) rotate(5deg);
   }
 `;
 
-export const ConnectionStatus = styled.div`
+export const BoardStats = styled.div`
   display: flex;
+  gap: 24px;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: ${(props) =>
-    props.$isConnected
-      ? "rgba(16, 185, 129, 0.15)"
-      : "rgba(239, 68, 68, 0.15)"};
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  border: 1px solid
-    ${(props) =>
-      props.$isConnected
-        ? "rgba(16, 185, 129, 0.3)"
-        : "rgba(239, 68, 68, 0.3)"};
-  transition: all 0.3s ease;
-`;
-
-export const StatusDot = styled.div`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: ${(props) => (props.$isConnected ? "#10b981" : "#ef4444")};
-  box-shadow: 0 0 12px
-    ${(props) => (props.$isConnected ? "#10b981" : "#ef4444")};
-  animation: ${(props) => (props.$isConnected ? "pulse 2s infinite" : "none")};
-
-  @keyframes pulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
-  }
-`;
-
-export const StatusText = styled.span`
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.85rem;
-  font-weight: 500;
 
   @media (max-width: 480px) {
-    display: none;
+    gap: 16px;
   }
+`;
+
+export const StatItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  min-width: 80px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+`;
+
+export const StatValue = styled.div`
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+`;
+
+export const StatLabel = styled.div`
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 export const ColumnsContainer = styled(motion.div).withConfig({
@@ -333,6 +457,7 @@ export const ColumnsContainer = styled(motion.div).withConfig({
   padding: 24px 0;
   min-height: 600px;
   position: relative;
+  z-index: 1;
 
   &::-webkit-scrollbar {
     height: 8px;
@@ -368,14 +493,27 @@ export const DragOverlayCard = styled(motion.div).withConfig({
   shouldForwardProp: filterMotionProps,
 })`
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 16px;
+  backdrop-filter: blur(25px);
+  border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25), 0 8px 16px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 0 12px 24px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   transform: rotate(8deg) scale(1.05);
   cursor: grabbing;
   max-width: 280px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+    border-radius: 20px 20px 0 0;
+  }
 
   h4 {
     margin: 0 0 8px 0;
@@ -421,6 +559,16 @@ export const EmptyState = styled(motion.div).withConfig({
   padding: 80px 20px;
   color: rgba(255, 255, 255, 0.8);
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    animation: bounce 2s ease-in-out infinite;
+  }
 
   h3 {
     font-size: 1.5rem;
@@ -434,10 +582,22 @@ export const EmptyState = styled(motion.div).withConfig({
     margin: 0;
     font-weight: 500;
     opacity: 0.8;
+    max-width: 400px;
+    line-height: 1.6;
+  }
+
+  @keyframes bounce {
+    0%,
+    100% {
+      transform: translateY(0) scale(1);
+    }
+    50% {
+      transform: translateY(-10px) scale(1.05);
+    }
   }
 `;
 
-// Nuevos componentes para el modal
+// Componentes para el modal
 export const ColumnModal = styled.div`
   position: fixed;
   top: 0;
@@ -450,57 +610,67 @@ export const ColumnModal = styled.div`
   z-index: 1000;
 `;
 
-export const ModalOverlay = styled.div`
+export const ModalOverlay = styled(motion.div)`
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
 `;
 
 export const ModalContent = styled(motion.div)`
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  padding: 2rem;
-  border-radius: 20px;
+  backdrop-filter: blur(25px);
+  padding: 2.5rem;
+  border-radius: 24px;
   min-width: 400px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 0 12px 24px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   position: relative;
   z-index: 1001;
 
   @media (max-width: 480px) {
     min-width: 320px;
     margin: 0 20px;
-    padding: 1.5rem;
+    padding: 2rem;
   }
 `;
 
 export const ModalHeader = styled.h3`
   margin: 0 0 1.5rem 0;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #1f2937;
   text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `;
 
 export const ModalInput = styled.input`
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 16px;
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
   font-size: 1rem;
   margin-bottom: 1.5rem;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   &:focus {
     outline: none;
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     background: white;
+    transform: translateY(-1px);
+  }
+
+  &::placeholder {
+    color: #9ca3af;
   }
 `;
 
@@ -511,28 +681,30 @@ export const ModalActions = styled.div`
 `;
 
 export const ModalButton = styled.button`
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-size: 0.9rem;
 
   background: ${(props) => {
     switch (props.variant) {
       case "primary":
         return "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
       case "secondary":
-        return "rgba(0, 0, 0, 0.1)";
+        return "rgba(0, 0, 0, 0.08)";
       default:
-        return "rgba(0, 0, 0, 0.1)";
+        return "rgba(0, 0, 0, 0.08)";
     }
   }};
 
   color: ${(props) => (props.variant === "primary" ? "white" : "#374151")};
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   &:hover:not(:disabled) {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
