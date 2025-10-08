@@ -55,8 +55,6 @@ export default function Board() {
   } = useKanban();
   const { addToast } = useToast();
 
-  console.log("[Board] tasks recibidas:", tasks);
-
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [activeTask, setActiveTask] = useState(null);
   const [showColumnModal, setShowColumnModal] = useState(false);
@@ -119,7 +117,7 @@ export default function Board() {
   const getTasksForColumn = (column) => {
     const name = column && column.name ? column.name : column;
     const columnTasks = tasks
-      .filter((task) => task.columna && task.columna.toLowerCase() === name.toLowerCase())
+      .filter((task) => task.columna === name)
       .sort((a, b) => (a.orden || 0) - (b.orden || 0));
 
     console.log(
@@ -327,7 +325,6 @@ export default function Board() {
                       items={columnTasks.map((task) => task._id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      {console.log(`[Board] columnTasks para columna "${column.name}":`, columnTasks)}
                       {columnTasks.map((task) => (
                         <Task key={task._id} task={task} />
                       ))}
