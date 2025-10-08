@@ -286,26 +286,67 @@ export const KanbanProvider = ({ children }) => {
       console.log("📡 [WS] Columna actualizada:", data);
       if (!data?.column) return;
       const c = data.column;
+      const oldName = data.oldName || c.oldName;
 
+      console.log("🔄 [WS] Actualizando columna:", c.name, "desde:", oldName);
+
+      // Actualizar columnas
       setColumns((prev = []) =>
         prev.map((pc) => (pc?._id === c._id ? { ...pc, name: c.name } : pc))
       );
 
-      // Actualizar mapa y tareas
+      // Actualizar mapa de columnas
       setColumnMap((prev) => ({
         ...prev,
         [c._id]: c.name,
       }));
 
-      // Actualizar nombre en tareas
-      setTasks((prev = []) =>
-        prev.map((t) => {
-          if (columnMap[t.columna] === c.oldName || t.columna === c.oldName) {
+      // 🔧 Sincronizar tareas que tenían el nombre anterior o el ID de columna
+      setTasks((prev = []) => {
+        console.log(
+          "🔄 Actualizando tareas para columna:",
+          c.name,
+          "desde:",
+          oldName
+        );
+        console.log("📋 Tareas antes de actualizar:", prev.length);
+        console.log(
+          "📋 Tareas actuales:",
+          prev.map((t) => ({ id: t._id, columna: t.columna }))
+        );
+
+        const updatedTasks = prev.map((t) => {
+          // Si la tarea tiene el nombre anterior o el ID de la columna, actualiza
+          if (t.columna === oldName || t.columna === c._id) {
+            console.log(
+              "✅ Actualizando tarea:",
+              t._id,
+              "de",
+              t.columna,
+              "a",
+              c.name
+            );
             return { ...t, columna: c.name };
           }
           return t;
-        })
-      );
+        });
+
+        console.log("📋 Tareas después de actualizar:", updatedTasks.length);
+        console.log(
+          "📋 Tareas actualizadas:",
+          updatedTasks.map((t) => ({ id: t._id, columna: t.columna }))
+        );
+        return updatedTasks;
+      });
+
+      // 🔧 Forzar re-render del componente para asegurar sincronización
+      setTimeout(() => {
+        console.log("🔄 Forzando re-render después de actualizar columna");
+        setTasks((currentTasks) => {
+          console.log("📋 Estado final de tareas:", currentTasks.length);
+          return currentTasks;
+        });
+      }, 100);
     });
 
     return () => {
@@ -715,6 +756,68 @@ export const KanbanProvider = ({ children }) => {
     }
   };
 
+  // Actualizar columna
+  const updateColumn = async (columnId, newName, oldName) => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/columns/${columnId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: newName,
+            oldName: oldName,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Error actualizando columna:", errorText);
+        throw new Error("Error actualizando columna");
+      }
+
+      const updated = await response.json();
+      console.log("✅ Columna actualizada:", updated);
+
+      // Actualizar estado local inmediatamente
+      setColumns((prev = []) =>
+        prev.map((pc) => (pc?._id === columnId ? { ...pc, name: newName } : pc))
+      );
+
+      setColumnMap((prev) => ({
+        ...prev,
+        [columnId]: newName,
+      }));
+
+      // Actualizar tareas que tenían el nombre anterior
+      setTasks((prev = []) =>
+        prev.map((t) => {
+          if (t.columna === oldName || t.columna === columnId) {
+            return { ...t, columna: newName };
+          }
+          return t;
+        })
+      );
+
+      addToast?.({
+        title: "Columna actualizada",
+        description: `Se renombró la columna a "${newName}"`,
+        type: "success",
+      });
+
+      return updated;
+    } catch (err) {
+      console.error("Error actualizando columna:", err);
+      addToast?.({
+        title: "Error",
+        description: "No se pudo actualizar la columna.",
+        type: "error",
+      });
+      throw err;
+    }
+  };
+
   // Reordenar tareas en columna
   const reorderColumnTasks = async (columnName, orderedIds) => {
     try {
@@ -816,6 +919,7 @@ export const KanbanProvider = ({ children }) => {
         isConnected,
         addColumn,
         removeColumn,
+        updateColumn,
         addTask,
         updateTask,
         deleteTask,
@@ -841,6 +945,7 @@ export const useKanban = () => {
       isConnected: false,
       addColumn: () => {},
       removeColumn: () => {},
+      updateColumn: () => {},
       moveTask: () => {},
       addTask: () => {},
       updateTask: () => {},

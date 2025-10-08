@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -18,18 +18,30 @@ import {
 } from "./StyledColumn";
 
 export default function Column({ column, children }) {
-  const { removeColumn } = useKanban();
+  const { removeColumn, updateColumn } = useKanban();
 
   const getTasksForColumn = () => {
     const { tasks } = useKanban();
     const columnName = column && column.name ? column.name : "";
+    const columnId = column && column._id ? column._id : "";
+
+    // Filtrar tareas que coincidan con el nombre O el ID de la columna
     return tasks
-      .filter((task) => task.columna === columnName)
+      .filter((task) => {
+        return task.columna === columnName || task.columna === columnId;
+      })
       .sort((a, b) => (a.orden || 0) - (b.orden || 0));
   };
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(column && column.name ? column.name : "");
+
+  // Sincronizar el estado local con los cambios del contexto
+  useEffect(() => {
+    if (column && column.name) {
+      setName(column.name);
+    }
+  }, [column?.name]);
 
   const id =
     column && column._id
@@ -66,28 +78,10 @@ export default function Column({ column, children }) {
     console.log(`✏️ [Column] Renombrando columna "${oldName}" a "${newName}"`);
 
     try {
-      const headers = { "Content-Type": "application/json" };
-      const response = await fetch(`http://localhost:3000/api/columns/${id}`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify({
-          name: newName,
-          oldName: oldName, // Enviar el nombre anterior para actualizar tareas
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Error renombrando columna:", errorText);
-        throw new Error("Error renombrando columna");
-      }
-
-      const updated = await response.json();
-      console.log("✅ [Column] Columna renombrada:", updated);
+      await updateColumn(id, newName, oldName);
       setEditing(false);
     } catch (e) {
       console.error("❌ [Column] Error al renombrar columna:", e);
-      alert("No se pudo renombrar la columna. Intenta de nuevo.");
       setName(oldName); // Revertir al nombre anterior
     }
   };
