@@ -1,4 +1,7 @@
 import React, { createContext, useState, useEffect } from "react";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const AuthContext = createContext();
 
@@ -22,61 +25,33 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch("http://localhost:3000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+      const response = await axios.post(`${API_URL}/api/auth/login`, { email, password }, {
+        headers: { "Content-Type": "application/json" },
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Error al iniciar sesión");
-      }
-
-      const data = await response.json();
-
+      const data = response.data;
       setToken(data.access_token);
       setUser(data.user);
-
-      // Guardar en localStorage
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error.response?.data?.message || error.message };
     }
   };
 
   const register = async (email, password, name) => {
     try {
-      const response = await fetch("http://localhost:3000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password, name }),
+      const response = await axios.post(`${API_URL}/api/auth/register`, { email, password, name }, {
+        headers: { "Content-Type": "application/json" },
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Error al registrarse");
-      }
-
-      const data = await response.json();
-
+      const data = response.data;
       setToken(data.access_token);
       setUser(data.user);
-
-      // Guardar en localStorage
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error.response?.data?.message || error.message };
     }
   };
 

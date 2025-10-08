@@ -1,8 +1,11 @@
 // src/context/KanbanContext.jsx
 import React, { createContext, useState, useEffect, useCallback } from "react";
+import axios from "axios";
 import { useSocket } from "../hooks/useSocket";
 import { useAuth } from "./AuthContext";
 import { useToast } from "./ToastContext";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const KanbanContext = createContext();
 
@@ -47,11 +50,11 @@ export const KanbanProvider = ({ children }) => {
         console.log("🔄 Carga inicial ÚNICA - iniciando...");
 
         // 1. Cargar columnas primero
-        const columnsRes = await fetch("http://localhost:3000/api/columns");
+        const columnsRes = await axios.get(`${API_URL}/api/columns`);
         let newColumnMap = {};
 
-        if (columnsRes.ok) {
-          const columnsData = await columnsRes.json();
+        if (columnsRes.status === 200) {
+          const columnsData = columnsRes.data;
           console.log("📊 Columnas cargadas:", columnsData);
           setColumns(Array.isArray(columnsData) ? columnsData : []);
 
@@ -78,11 +81,11 @@ export const KanbanProvider = ({ children }) => {
         }
 
         // 2. Cargar tareas y mapear columnas
-        const tasksRes = await fetch("http://localhost:3000/api/tareas");
+        const tasksRes = await axios.get(`${API_URL}/api/tareas`);
         console.log("📡 Respuesta de /api/tareas:", tasksRes.status);
 
-        if (tasksRes.ok) {
-          const tasksData = await tasksRes.json();
+        if (tasksRes.status === 200) {
+          const tasksData = tasksRes.data;
           console.log("📋 Tareas recibidas del backend:", tasksData);
 
           if (!Array.isArray(tasksData)) {
@@ -95,11 +98,10 @@ export const KanbanProvider = ({ children }) => {
             setTasks(mappedTasks);
           }
         } else {
-          const errorText = await tasksRes.text();
           console.error(
             "❌ Error cargando tareas:",
             tasksRes.status,
-            errorText
+            tasksRes.statusText
           );
           setTasks([]);
         }

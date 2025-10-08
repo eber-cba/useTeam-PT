@@ -4,6 +4,10 @@ import { useKanban } from "../../context/KanbanContext";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import ConfirmationModal from "./ConfirmationModal";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
+
 import {
   ExportConfigContainer,
   ExportHeader,
@@ -65,20 +69,19 @@ export default function ExportConfig() {
     setShowConfirmModal(false);
     setIsExporting(true);
     try {
-      const response = await fetch("http://localhost:3000/api/export/backlog", {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
+      const response = await axios.post(
+        `${API_URL}/api/export/backlog`,
+        {
           to: email,
           userName: user?.name || "",
           column: selectedColumn,
           fields: selectedFields,
           mensaje,
-        }),
-      });
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.message || "Error en la exportación");
+        },
+        { headers: getAuthHeaders() }
+      );
+      if (response.status !== 200) {
+        throw new Error(response.data?.message || "Error en la exportación");
       }
       addToast({
         title: "Exportación iniciada",
@@ -91,6 +94,7 @@ export default function ExportConfig() {
       setIsExporting(false);
     }
   };
+
 
   return (
     <ExportConfigContainer

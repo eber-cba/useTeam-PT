@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useKanban } from "../../context/KanbanContext";
+import axios from "axios";
 import {
   UsersContainer,
   UsersHeader,
@@ -15,6 +16,8 @@ import {
   EmptyState
 } from "../CollaborationPanel/StyledCollaborationPanel";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function ConnectedUsers() {
   const { isConnected } = useKanban();
   const [users, setUsers] = useState([]);
@@ -29,9 +32,8 @@ export default function ConnectedUsers() {
     window.socket?.on("users-connected", handleUsersConnected);
 
     // Obtener usuarios registrados vía API
-    fetch("http://localhost:3000/api/auth/users")
-      .then((res) => res.json())
-      .then((data) => setRegisteredUsers(data.length))
+    axios.get(`${API_URL}/api/auth/users`)
+      .then((res) => setRegisteredUsers(res.data.length))
       .catch(() => setRegisteredUsers(0));
 
     return () => {

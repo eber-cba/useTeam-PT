@@ -3,23 +3,20 @@ import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 
-// Load .env from backend folder first, then fallback to repository root .env
-dotenv.config();
-// If key like PORT is still undefined, try loading repo root .env
-if (!process.env.PORT) {
-  dotenv.config({ path: join(__dirname, '..', '..', '.env') });
-}
+// 🧩 Cargar variables desde /backend/.env
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Prefijo global para todas las rutas (ej: /api/users)
   app.setGlobalPrefix('api');
 
-  // Permitir localhost:5173/5174 en desarrollo si FRONTEND_URL no está seteado
+  // Orígenes permitidos (CORS)
   const allowedOrigins = [
-    process.env.FRONTEND_URL,
-    'http://localhost:5173',
-    'http://localhost:5174',
+    process.env.FRONTEND_URL, // producción (Vercel)
+    'http://localhost:5173', // desarrollo local
+    'http://localhost:5174', // otra pestaña local opcional
   ].filter(Boolean);
 
   app.enableCors({
@@ -27,8 +24,13 @@ async function bootstrap() {
     credentials: true,
   });
 
+  // Puerto de escucha
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`🚀 Server running on http://localhost:${port}/api`);
+
+  console.log('✅ Allowed origins:', allowedOrigins);
+  console.log(`🚀 Server running on port ${port}`);
+  console.log(`🌐 API base URL: http://localhost:${port}/api`);
 }
+
 bootstrap();
