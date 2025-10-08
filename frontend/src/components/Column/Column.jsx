@@ -193,46 +193,6 @@ export default function Column({ column, children }) {
         >
           {children && React.Children.count(children) > 0 ? (
             children
-          ) : tasksForRender.length > 0 ? (
-            tasksForRender.map((task, i) => (
-              <TaskCard
-                key={task._id || task.id || i}
-                initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{
-                  delay: 0.1 + i * 0.05,
-                  duration: 0.3,
-                  type: "spring",
-                  stiffness: 200,
-                }}
-                whileHover={{
-                  y: -4,
-                  scale: 1.02,
-                  transition: { duration: 0.2 },
-                }}
-                $priority={task.prioridad || "media"}
-              >
-                <div className="task-header">
-                  <h4>{task.titulo || task.title || "Tarea sin título"}</h4>
-                  <span className="priority-dot" />
-                </div>
-                {task.descripcion && <p>{task.descripcion}</p>}
-                <div className="task-footer">
-                  <div className="task-meta">
-                    {task.prioridad && (
-                      <span className={`priority-badge ${task.prioridad}`}>
-                        {task.prioridad}
-                      </span>
-                    )}
-                    {task.fecha && (
-                      <span className="task-date">
-                        {new Date(task.fecha).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </TaskCard>
-            ))
           ) : (
             <EmptyColumnMessage
               initial={{ opacity: 0, scale: 0.8 }}

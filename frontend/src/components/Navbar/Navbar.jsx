@@ -43,14 +43,7 @@ const Navbar = ({ onMenuToggle, showMobileMenu }) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const quickActions = [
-    { icon: FiPlus, label: "Crear", action: () => console.log("Crear") },
-    {
-      icon: FiZap,
-      label: "Rápido",
-      action: () => console.log("Acción rápida"),
-    },
-  ];
+  const quickActions = [];
 
   return (
     <>

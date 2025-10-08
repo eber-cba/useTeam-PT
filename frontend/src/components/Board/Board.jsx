@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
 import {
   SortableContext,
-  verticalListSortingStrategy,
   horizontalListSortingStrategy,
+  verticalListSortingStrategy, // AÑADIR ESTA IMPORTACIÓN
   arrayMove,
 } from "@dnd-kit/sortable";
 import Column from "../Column/Column";
 import Task from "../Task/Task";
 import TaskForm from "../TaskForm/TaskForm";
+import ExportButton from "../ExportButton/ExportButton";
 import { useKanban } from "../../context/KanbanContext";
 import { useToast } from "../../context/ToastContext";
 import {
@@ -115,9 +116,15 @@ export default function Board() {
 
   const getTasksForColumn = (column) => {
     const name = column && column.name ? column.name : column;
-    return tasks
+    const columnTasks = tasks
       .filter((task) => task.columna === name)
       .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+
+    console.log(
+      `📊 [Board] Tareas para columna "${name}":`,
+      columnTasks.length
+    );
+    return columnTasks;
   };
 
   const handleCreateColumn = () => {
@@ -129,13 +136,20 @@ export default function Board() {
     }
   };
 
-  // Calcular estadísticas
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(
-    (task) => task.estado === "completada"
-  ).length;
-  const progressPercentage =
-    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  // Calcular estadísticas - SOLO cantidad de tareas y columnas
+  const { totalTasks, columnsCount } = useMemo(() => {
+    const total = tasks.length;
+    const colsCount = columns.length;
+
+    console.log(
+      `📊 [Board] Estadísticas - Total: ${total}, Columnas: ${colsCount}`
+    );
+
+    return {
+      totalTasks: total,
+      columnsCount: colsCount,
+    };
+  }, [tasks, columns]);
 
   return (
     <BoardContainer
@@ -207,12 +221,8 @@ export default function Board() {
               <StatLabel>Tareas</StatLabel>
             </StatItem>
             <StatItem>
-              <StatValue>{columns.length}</StatValue>
+              <StatValue>{columnsCount}</StatValue>
               <StatLabel>Columnas</StatLabel>
-            </StatItem>
-            <StatItem>
-              <StatValue>{progressPercentage}%</StatValue>
-              <StatLabel>Progreso</StatLabel>
             </StatItem>
           </BoardStats>
         </HeaderRight>
@@ -303,39 +313,19 @@ export default function Board() {
             ) : (
               columns.map((column, index) => {
                 const colId = column._id || column.name;
+                const columnTasks = getTasksForColumn(column);
 
-                if (
-                  activeColumnId &&
-                  overColumnId === colId &&
-                  activeColumnId !== overColumnId
-                ) {
-                  return [
-                    <div
-                      key={"ghost-" + colId}
-                      className="ghost-placeholder"
-                    />,
-                    <Column key={colId} column={column} index={index}>
-                      <SortableContext
-                        items={getTasksForColumn(column).map(
-                          (task) => task._id
-                        )}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        {getTasksForColumn(column).map((task) => (
-                          <Task key={task._id} task={task} />
-                        ))}
-                      </SortableContext>
-                    </Column>,
-                  ];
-                }
+                console.log(
+                  `🎯 Renderizando columna "${column.name}" con ${columnTasks.length} tareas`
+                );
 
                 return (
                   <Column key={colId} column={column} index={index}>
                     <SortableContext
-                      items={getTasksForColumn(column).map((task) => task._id)}
+                      items={columnTasks.map((task) => task._id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      {getTasksForColumn(column).map((task) => (
+                      {columnTasks.map((task) => (
                         <Task key={task._id} task={task} />
                       ))}
                     </SortableContext>
@@ -371,6 +361,7 @@ export default function Board() {
       </DndContext>
 
       {showTaskForm && <TaskForm onClose={() => setShowTaskForm(false)} />}
+      <ExportButton />
     </BoardContainer>
   );
 }
