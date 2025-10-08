@@ -15,8 +15,15 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
+  // Permitir localhost:5173/5174 en desarrollo si FRONTEND_URL no está seteado
+  const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:5173',
+    'http://localhost:5174',
+  ].filter(Boolean);
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: allowedOrigins,
     credentials: true,
   });
 

@@ -16,21 +16,23 @@ export const useSocket = (url = "http://localhost:3000") => {
 
     // Eventos de conexión
     socketRef.current.on("connect", () => {
-      console.log("Conectado al servidor WebSocket");
+      // LOGS NUEVOS PARA DEPURACIÓN
+      console.log("[SOCKET] Conectado/desconectado", { connected: socketRef.current.connected });
       // Unirse automáticamente al tablero Kanban
       socketRef.current.emit("join-kanban");
     });
 
     socketRef.current.on("disconnect", () => {
-      console.log("Desconectado del servidor WebSocket");
+      // LOGS NUEVOS PARA DEPURACIÓN
+      console.log("[SOCKET] Conectado/desconectado", { connected: socketRef.current.connected });
     });
 
     socketRef.current.on("connected", (data) => {
-      console.log("Mensaje del servidor:", data.message);
+      // Evento 'connected' recibido
     });
 
     socketRef.current.on("joined-kanban", (data) => {
-      console.log("Unido al tablero Kanban:", data.message);
+      // Evento 'joined-kanban' recibido
     });
 
     // Limpiar conexión al desmontar

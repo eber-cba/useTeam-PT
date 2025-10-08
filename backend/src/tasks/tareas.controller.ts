@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { TareasService } from './tareas.service';
 import { TareasGateway } from './tareas.gateway';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('tareas')
 export class TareasController {
@@ -25,7 +24,6 @@ export class TareasController {
     return this.tareasService.findAll();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Body() body: any, @Request() req: any) {
     const creator = req.user
@@ -58,7 +56,6 @@ export class TareasController {
     return response;
   }
 
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -76,23 +73,79 @@ export class TareasController {
     const payload = { ...body, lastEditedBy: editor };
     const updated = await this.tareasService.update(id, payload);
 
+    // Emitir evento WebSocket para sincronización en tiempo real
+    if (updated) {
+      try {
+        this.tareasGateway.emitTaskUpdate('task-updated', {
+          taskId: updated._id,
+          updates: updated,
+          updatedBy: editor,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.error(
+          'Error emitiendo evento task-updated desde controller:',
+          err,
+        );
+      }
+    }
+
     const updatedObject = updated?.toObject?.() ?? updated;
     return updatedObject;
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async delete(@Param('id') id: string) {
+    console.log(`🗑️ [Controller] Eliminando tarea ${id}`);
+
     const deleted = await this.tareasService.delete(id);
+
+    // Emitir evento WebSocket para sincronización en tiempo real
+    if (deleted) {
+      try {
+        console.log(
+          `📡 [Controller] Emitiendo evento task-removed para tarea ${id}`,
+        );
+        this.tareasGateway.emitTaskUpdate('task-removed', {
+          taskId: id,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.error(
+          '❌ Error emitiendo evento task-removed desde controller:',
+          err,
+        );
+      }
+    }
+
     const deletedObject = deleted?.toObject?.() ?? deleted;
     return deletedObject;
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Post('reorder')
+  async reorderTasks(@Body() body: { column: string; orderedIds: string[] }) {
+    const { column, orderedIds } = body;
+    // Actualizar el campo 'orden' de cada tarea en la columna
+    await Promise.all(
+      orderedIds.map((taskId, idx) =>
+        this.tareasService.update(taskId, { orden: idx }),
+      ),
+    );
+    // Obtener las tareas actualizadas de la columna
+    const updatedTasks = await this.tareasService.findAll();
+    // Emitir evento WebSocket para sincronización en tiempo real
+    this.tareasGateway.emitTaskUpdate('tasks-reordered', {
+      column,
+      orderedIds,
+      tasks: updatedTasks.filter((t) => t.columna === column),
+    });
+    return { success: true };
+  }
+
   @Post('export-email')
   async exportAndEmail(@Request() req) {
-    const userEmail = req.user.email;
-    const userName = req.user.name;
+    const userEmail = req.user?.email || 'guest@example.com';
+    const userName = req.user?.name || 'Invitado';
 
     return this.tareasService.exportAndEmail(userEmail, userName);
   }

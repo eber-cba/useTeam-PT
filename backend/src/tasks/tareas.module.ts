@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TareasService } from './tareas.service';
 import { TareasController } from './tareas.controller';
@@ -9,8 +9,8 @@ import { Tarea, TareaSchema } from './tareas.schema';
   imports: [
     MongooseModule.forFeature([{ name: Tarea.name, schema: TareaSchema }]),
   ],
-  controllers: [TareasController],
   providers: [TareasService, TareasGateway],
-  exports: [TareasService, TareasGateway],
+  controllers: [TareasController],
+  exports: [TareasService, TareasGateway], // Exportar ambos para usar en ColumnsModule
 })
 export class TareasModule {}

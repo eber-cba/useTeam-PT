@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 
-export default function LoginForm({ onSwitchToRegister }) {
+export default function LoginForm({ onSwitchToRegister, onClose }) {
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
@@ -17,7 +17,10 @@ export default function LoginForm({ onSwitchToRegister }) {
 
     const result = await login(formData.email, formData.password);
 
-    if (!result.success) {
+    if (result.success) {
+      // Cerrar modal al loguearse exitosamente
+      onClose?.();
+    } else {
       setError(result.error);
     }
 

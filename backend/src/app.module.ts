@@ -6,6 +6,7 @@ import { NotificacionesModule } from './notificaciones/notificaciones.module';
 import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { ExportModule } from './export/export.module';
+import { ColumnsModule } from './columns/columns.module';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { ExportModule } from './export/export.module';
     AuthModule,
     TareasModule,
     // Columns module provides persistent columns for the Kanban
-    require('./columns/columns.module').ColumnsModule,
+    ColumnsModule,
     NotificacionesModule,
     ExportModule,
   ],

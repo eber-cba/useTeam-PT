@@ -1,9 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useKanban } from "../../context/KanbanContext";
+import {
+  ActivityContainer,
+  ActivityHeader,
+  ActivityTitle,
+  StatusIndicator,
+  StatusDot,
+  ActivityFeed,
+  ActivityItem,
+  ActivityTime,
+  EmptyState
+} from "../CollaborationPanel/StyledCollaborationPanel";
 
 export default function CollaborationFeed() {
   const { isConnected } = useKanban();
   const [activities, setActivities] = useState([]);
+
+  // LOGS NUEVOS PARA DEPURACIÓN
+  console.log("[COLLABFEED] Estado conexión:", isConnected);
 
   useEffect(() => {
     if (!isConnected || !window.socket) return;
@@ -55,18 +69,21 @@ export default function CollaborationFeed() {
   if (!isConnected) return null;
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h4 style={styles.title}>Actividad en Tiempo Real</h4>
-        <div style={styles.status}>
-          <div style={styles.dot}></div>
+    <ActivityContainer>
+      <ActivityHeader>
+        <ActivityTitle>Actividad en Tiempo Real</ActivityTitle>
+        <StatusIndicator>
+          <StatusDot
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
           <span>Conectado</span>
-        </div>
-      </div>
+        </StatusIndicator>
+      </ActivityHeader>
 
-      <div style={styles.feed}>
+      <ActivityFeed>
         {activities.length === 0 ? (
-          <p style={styles.empty}>No hay actividad reciente</p>
+          <EmptyState>No hay actividad reciente</EmptyState>
         ) : (
           activities.map((a, i) => {
             const userName =
@@ -75,66 +92,19 @@ export default function CollaborationFeed() {
                 : a.user?.name || a.user?.email || "Usuario desconocido";
 
             return (
-              <div key={i} style={styles.item}>
+              <ActivityItem
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.05 }}
+              >
                 <strong>{userName}</strong> {a.action} <em>{a.task}</em>{" "}
-                <span style={styles.time}>({a.time})</span>
-              </div>
+                <ActivityTime>({a.time})</ActivityTime>
+              </ActivityItem>
             );
           })
         )}
-      </div>
-    </div>
+      </ActivityFeed>
+    </ActivityContainer>
   );
 }
-
-const styles = {
-  container: {
-    background: "#f9fafb",
-    borderRadius: "12px",
-    padding: "16px",
-    marginTop: "20px",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "12px",
-  },
-  title: {
-    margin: 0,
-    fontSize: "18px",
-    fontWeight: "600",
-  },
-  status: {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    fontSize: "14px",
-    color: "green",
-  },
-  dot: {
-    width: "10px",
-    height: "10px",
-    borderRadius: "50%",
-    backgroundColor: "green",
-    animation: "pulse 1.5s infinite",
-  },
-  feed: {
-    maxHeight: "250px",
-    overflowY: "auto",
-    fontSize: "14px",
-  },
-  item: {
-    padding: "6px 0",
-    borderBottom: "1px solid #eee",
-  },
-  time: {
-    color: "#888",
-    fontSize: "12px",
-  },
-  empty: {
-    textAlign: "center",
-    color: "#888",
-  },
-};

@@ -11,12 +11,28 @@ interface TareaConTempId extends Partial<Tarea> {
 export class TareasService {
   constructor(@InjectModel(Tarea.name) private tareaModel: Model<Tarea>) {}
 
-  findAll() {
-    return this.tareaModel.find().exec();
+  async findAll() {
+    try {
+      console.log('🔍 Buscando todas las tareas en la base de datos...');
+      const tareas = await this.tareaModel.find().sort({ orden: 1 }).exec();
+      console.log(`📋 Encontradas ${tareas.length} tareas en la base de datos`);
+      console.log(
+        '📋 Tareas encontradas:',
+        tareas.map((t) => ({
+          id: t._id,
+          titulo: t.titulo,
+          columna: t.columna,
+        })),
+      );
+      return tareas;
+    } catch (error) {
+      console.error('❌ Error al buscar tareas:', error);
+      throw error;
+    }
   }
 
   async create(createTareaDto: Partial<Tarea>): Promise<TareaConTempId> {
-    console.log('Datos recibidos para crear tarea:', createTareaDto);
+    console.log('📝 Datos recibidos para crear tarea:', createTareaDto);
 
     // Eliminar _id temporal si existe
     if (createTareaDto._id) {
@@ -30,7 +46,7 @@ export class TareasService {
       throw new Error('Error al guardar la tarea en la base de datos.');
     }
 
-    console.log('Tarea guardada en la base de datos:', savedTarea);
+    console.log('✅ Tarea guardada en la base de datos:', savedTarea);
 
     const savedObject = savedTarea.toObject?.() ?? (savedTarea as any);
 
@@ -39,7 +55,7 @@ export class TareasService {
       clientTempId: createTareaDto.clientTempId,
     };
 
-    console.log('Respuesta enviada al cliente:', response);
+    console.log('📤 Respuesta enviada al cliente:', response);
 
     return response;
   }
@@ -61,11 +77,36 @@ export class TareasService {
 
   async updateTaskColumn(taskId: string, newColumna: string, order?: number) {
     const updateData: any = { columna: newColumna };
-    if (order !== undefined) updateData.order = order;
+    if (order !== undefined) updateData.orden = order;
 
     return this.tareaModel
       .findByIdAndUpdate(taskId, updateData, { new: true })
       .exec();
+  }
+
+  // NUEVO: Método para actualizar el nombre de columna en todas las tareas
+  async updateColumnNameInTasks(oldColumnId: string, newColumnId: string) {
+    console.log(
+      `🔄 Actualizando tareas de columna ${oldColumnId} a ${newColumnId}`,
+    );
+
+    try {
+      const result = await this.tareaModel
+        .updateMany(
+          { columna: oldColumnId },
+          { $set: { columna: newColumnId } },
+        )
+        .exec();
+
+      console.log(`✅ ${result.modifiedCount} tareas actualizadas`);
+      return result;
+    } catch (error) {
+      console.error(
+        '❌ Error actualizando nombres de columna en tareas:',
+        error,
+      );
+      throw error;
+    }
   }
 
   async exportAndEmail(userEmail: string, userName: string) {

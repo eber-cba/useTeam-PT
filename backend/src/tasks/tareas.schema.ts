@@ -29,6 +29,12 @@ export class Tarea extends Document {
 
   @Prop({ type: Date })
   lastEditedAt: Date;
+
+  @Prop({ default: 'media' })
+  prioridad: string;
+
+  @Prop({ type: Number, default: 0 })
+  orden: number;
 }
 
 export const TareaSchema = SchemaFactory.createForClass(Tarea);

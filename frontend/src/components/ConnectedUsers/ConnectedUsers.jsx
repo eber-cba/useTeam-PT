@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useKanban } from "../../context/KanbanContext";
+import {
+  UsersContainer,
+  UsersHeader,
+  UsersTitle,
+  UserCount,
+  UsersList,
+  UserItem,
+  UserAvatar,
+  UserInfo,
+  UserName,
+  UserStatus,
+  OnlineIndicator,
+  EmptyState
+} from "../CollaborationPanel/StyledCollaborationPanel";
 
 export default function ConnectedUsers() {
   const { isConnected } = useKanban();
@@ -25,30 +39,43 @@ export default function ConnectedUsers() {
     };
   }, [isConnected]);
 
+  // LOGS NUEVOS PARA DEPURACIÓN
+  console.log("[CONNECTEDUSERS] Estado conexión:", isConnected);
   if (!isConnected) return null;
 
   const activeUsers = users.length;
 
   return (
-    <div className="connected-users">
-      <div className="users-header">
-        <h4>Colaboradores</h4>
-        <span className="user-count">
+    <UsersContainer>
+      <UsersHeader>
+        <UsersTitle>Colaboradores</UsersTitle>
+        <UserCount>
           {activeUsers} conectados / {registeredUsers} registrados
-        </span>
-      </div>
-      <div className="users-list">
-        {users.map((user, idx) => (
-          <div key={user.id || user.email || idx} className="user-item active">
-            <div className="user-avatar-small">{user.name ? user.name[0] : (user.email ? user.email[0] : user.id?.[0] || "?")}</div>
-            <div className="user-info">
-              <span className="user-name">{user.name || user.email || user.id || "Sin datos"}</span>
-              <span className="user-status">En línea</span>
-            </div>
-            <div className="status-indicator online"></div>
-          </div>
-        ))}
-      </div>
-    </div>
+        </UserCount>
+      </UsersHeader>
+      <UsersList>
+        {users.length === 0 ? (
+          <EmptyState>No hay usuarios conectados</EmptyState>
+        ) : (
+          users.map((user, idx) => (
+            <UserItem
+              key={user.id || user.email || idx}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: idx * 0.1 }}
+            >
+              <UserAvatar>
+                {user.name ? user.name[0] : (user.email ? user.email[0] : user.id?.[0] || "?")}
+              </UserAvatar>
+              <UserInfo>
+                <UserName>{user.name || user.email || user.id || "Sin datos"}</UserName>
+                <UserStatus>En línea</UserStatus>
+              </UserInfo>
+              <OnlineIndicator />
+            </UserItem>
+          ))
+        )}
+      </UsersList>
+    </UsersContainer>
   );
 }

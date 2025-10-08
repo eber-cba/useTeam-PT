@@ -8,6 +8,9 @@ export class Column extends Document {
 
   @Prop()
   order?: number;
+
+  @Prop({ required: true })
+  createdBy: string;
 }
 
 export const ColumnSchema = SchemaFactory.createForClass(Column);

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 
-export default function RegisterForm({ onSwitchToLogin }) {
+export default function RegisterForm({ onSwitchToLogin, onClose }) {
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
@@ -36,7 +36,10 @@ export default function RegisterForm({ onSwitchToLogin }) {
       formData.name
     );
 
-    if (!result.success) {
+    if (result.success) {
+      // Cerrar modal al registrarse exitosamente
+      onClose?.();
+    } else {
       setError(result.error);
     }
 

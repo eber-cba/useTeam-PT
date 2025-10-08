@@ -4,6 +4,9 @@ import { useKanban } from "../../context/KanbanContext";
 export default function ConnectionStatus() {
   const { isConnected } = useKanban();
 
+  // LOGS NUEVOS PARA DEPURACIÓN
+  console.log("[CONNSTATUS] Estado conexión:", isConnected);
+
   return (
     <div
       style={{

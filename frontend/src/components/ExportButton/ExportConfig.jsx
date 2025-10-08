@@ -1,7 +1,26 @@
 import React, { useState } from "react";
+import { FiDownload, FiMail } from "react-icons/fi";
 import { useKanban } from "../../context/KanbanContext";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import ConfirmationModal from "./ConfirmationModal";
+import {
+  ExportConfigContainer,
+  ExportHeader,
+  ExportTitle,
+  ExportIcon,
+  FormSection,
+  SectionTitle,
+  FormGroup,
+  FormLabel,
+  FormInput,
+  FormSelect,
+  CheckboxGroup,
+  CheckboxItem,
+  FormTextarea,
+  ExportButton,
+  HelpText
+} from "./StyledExportConfig";
 
 const CAMPOS = [
   { key: "titulo", label: "Título" },
@@ -20,6 +39,7 @@ export default function ExportConfig() {
   const [selectedFields, setSelectedFields] = useState(CAMPOS.map(c => c.key));
   const [mensaje, setMensaje] = useState("");
   const [isExporting, setIsExporting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const handleFieldChange = (field) => {
     setSelectedFields(prev =>
@@ -29,7 +49,7 @@ export default function ExportConfig() {
     );
   };
 
-  const handleExport = async () => {
+  const handleExportClick = () => {
     if (!email || !email.includes("@")) {
       addToast({ title: "Email inválido", description: "Ingresa un email válido.", type: "error" });
       return;
@@ -38,6 +58,11 @@ export default function ExportConfig() {
       addToast({ title: "Campos requeridos", description: "Selecciona al menos un campo.", type: "error" });
       return;
     }
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmExport = async () => {
+    setShowConfirmModal(false);
     setIsExporting(true);
     try {
       const response = await fetch("http://localhost:3000/api/export/backlog", {
@@ -68,63 +93,102 @@ export default function ExportConfig() {
   };
 
   return (
-    <div style={{ padding: 20, border: "1px solid #eee", borderRadius: 8, background: "#fafafa", maxWidth: 400 }}>
-      <h3>Configuración de Exportación</h3>
-      <div style={{ marginBottom: 12 }}>
-        <label>Email destino:</label>
-        <input
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="ejemplo@correo.com"
-          style={{ width: "100%", padding: 8, marginTop: 4 }}
-        />
-        <small>Puedes usar tu email o escribir otro.</small>
-      </div>
-      <div style={{ marginBottom: 12 }}>
-        <label>Selecciona columna (opcional):</label>
-        <select
-          value={selectedColumn}
-          onChange={e => setSelectedColumn(e.target.value)}
-          style={{ width: "100%", padding: 8, marginTop: 4 }}
-        >
-          <option value="">Todas</option>
-          {columns.map(col => (
-            <option key={col._id || col.name} value={col.name}>{col.name}</option>
-          ))}
-        </select>
-      </div>
-      <div style={{ marginBottom: 12 }}>
-        <label>Campos a exportar:</label>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <ExportConfigContainer
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <ExportHeader>
+        <ExportIcon>
+          <FiDownload />
+        </ExportIcon>
+        <ExportTitle>Configuración de Exportación</ExportTitle>
+      </ExportHeader>
+
+      <FormSection>
+        <SectionTitle>
+          <FiMail style={{ marginRight: '8px' }} />
+          Destino del Email
+        </SectionTitle>
+        <FormGroup>
+          <FormLabel>Email destino:</FormLabel>
+          <FormInput
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="ejemplo@correo.com"
+          />
+          <HelpText>Puedes usar tu email o escribir otro.</HelpText>
+        </FormGroup>
+      </FormSection>
+
+      <FormSection>
+        <SectionTitle>Filtros de Exportación</SectionTitle>
+        <FormGroup>
+          <FormLabel>Selecciona columna (opcional):</FormLabel>
+          <FormSelect
+            value={selectedColumn}
+            onChange={e => setSelectedColumn(e.target.value)}
+          >
+            <option value="">Todas las columnas</option>
+            {columns.map(col => (
+              <option key={col._id || col.name} value={col.name}>{col.name}</option>
+            ))}
+          </FormSelect>
+        </FormGroup>
+      </FormSection>
+
+      <FormSection>
+        <SectionTitle>Campos a Exportar</SectionTitle>
+        <CheckboxGroup>
           {CAMPOS.map(campo => (
-            <label key={campo.key}>
+            <CheckboxItem key={campo.key}>
               <input
                 type="checkbox"
                 checked={selectedFields.includes(campo.key)}
                 onChange={() => handleFieldChange(campo.key)}
-              /> {campo.label}
-            </label>
+              />
+              <span>{campo.label}</span>
+            </CheckboxItem>
           ))}
-        </div>
-      </div>
-      <div style={{ marginBottom: 12 }}>
-        <label>Mensaje adicional (opcional):</label>
-        <textarea
-          value={mensaje}
-          onChange={e => setMensaje(e.target.value)}
-          rows={3}
-          style={{ width: "100%", padding: 8, marginTop: 4 }}
-          placeholder="Mensaje para el destinatario"
-        />
-      </div>
-      <button
-        onClick={handleExport}
+        </CheckboxGroup>
+      </FormSection>
+
+      <FormSection>
+        <SectionTitle>Mensaje Adicional</SectionTitle>
+        <FormGroup>
+          <FormLabel>Mensaje adicional (opcional):</FormLabel>
+          <FormTextarea
+            value={mensaje}
+            onChange={e => setMensaje(e.target.value)}
+            rows={3}
+            placeholder="Mensaje para el destinatario"
+          />
+        </FormGroup>
+      </FormSection>
+
+      <ExportButton
+        onClick={handleExportClick}
         disabled={isExporting || !isAuthenticated()}
-        style={{ padding: "10px 20px", background: "#007bff", color: "#fff", border: "none", borderRadius: 5, cursor: "pointer" }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
+        <FiDownload />
         {isExporting ? "Procesando..." : "Exportar CSV por Email"}
-      </button>
-    </div>
+      </ExportButton>
+
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmExport}
+        isLoading={isExporting}
+        exportConfig={{
+          email,
+          column: selectedColumn || "Todas las columnas",
+          fields: selectedFields.map(field => CAMPOS.find(c => c.key === field)?.label || field),
+          message: mensaje
+        }}
+      />
+    </ExportConfigContainer>
   );
 }

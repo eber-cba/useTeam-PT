@@ -4,7 +4,23 @@ import { useDraggable } from "@dnd-kit/core";
 import { useKanban } from "../../context/KanbanContext";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { FiEdit2, FiTrash2, FiUser, FiCalendar, FiMove } from 'react-icons/fi';
 import TaskForm from "../TaskForm/TaskForm";
+import {
+  TaskCard,
+  TaskHeader,
+  TaskTitle,
+  TaskActions,
+  ActionButton,
+  TaskDescription,
+  TaskMeta,
+  PriorityBadge,
+  TaskDate,
+  AssignedUser,
+  TaskFooter,
+  DragIndicator,
+  AvatarCircle
+} from './StyledTask';
 
 const Task = ({ task }) => {
   const { moveTask, updateTask, deleteTask } = useKanban();
@@ -35,6 +51,14 @@ const Task = ({ task }) => {
       default:
         return "#6c757d";
     }
+  };
+
+  const getInitials = (user) => {
+    const label = (user?.name || user?.email || user?.id || '').trim();
+    if (!label) return '?';
+    const parts = label.split(/\s|\./).filter(Boolean);
+    const initials = parts.slice(0, 2).map(p => p[0].toUpperCase()).join('');
+    return initials || label[0].toUpperCase();
   };
 
   const handleDelete = () => {
@@ -72,106 +96,141 @@ const Task = ({ task }) => {
   };
 
   return (
-    <div
+    <TaskCard
       ref={setNodeRef}
       style={style}
-      className={`task-card ${isDragging ? "dragging" : ""}`}
+      isDragging={isDragging}
+      priority={task.prioridad}
       {...(!isEditing ? listeners : {})}
       {...(!isEditing ? attributes : {})}
       onDoubleClick={(e) => {
         e.stopPropagation();
         setIsEditing(true);
       }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
     >
-      <div className="task-header">
-        <h4 className="task-title">{task.titulo}</h4>
-        <div
-          className="priority-indicator"
-          style={{ backgroundColor: getPriorityColor(task.prioridad) }}
-        />
-        <button
-          className="task-open-btn"
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log("Abrir modal para task", task._id);
-            setIsEditing(true);
-          }}
-          title="Abrir tarea"
+      <DragIndicator>
+        <FiMove />
+      </DragIndicator>
+      
+      <TaskHeader>
+        <TaskTitle
+          whileHover={{ scale: 1.02 }}
         >
-          ✏️
-        </button>
-      </div>
+          {task.titulo}
+        </TaskTitle>
+        <TaskActions>
+          <ActionButton
+            variant="edit"
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEditing(true);
+            }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            title="Editar tarea"
+          >
+            <FiEdit2 />
+          </ActionButton>
+          <ActionButton
+            variant="delete"
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            title="Eliminar tarea"
+          >
+            <FiTrash2 />
+          </ActionButton>
+        </TaskActions>
+      </TaskHeader>
+
       {task.descripcion && (
-        <p className="task-description">{task.descripcion}</p>
-      )}
-      {task.createdBy && (
-        <div className="task-meta">
-          Creada por:{" "}
-          {task.createdBy.name || task.createdBy.email || task.createdBy.id}
-        </div>
-      )}
-      {task.lastEditedBy && (
-        <div className="task-meta">
-          Editada por:{" "}
-          {task.lastEditedBy.name ||
-            task.lastEditedBy.email ||
-            task.lastEditedBy.id}{" "}
-          -{" "}
-          {task.lastEditedAt
-            ? new Date(task.lastEditedAt).toLocaleString()
-            : ""}
-        </div>
+        <TaskDescription
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          {task.descripcion}
+        </TaskDescription>
       )}
 
-      <div className="task-actions">
-        <button
-          type="button"
-          className="btn-small"
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log("Editar (botón) modal para task", task._id);
-            setIsEditing(true);
-          }}
+      <TaskMeta>
+        <PriorityBadge 
+          priority={task.prioridad}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
         >
-          Editar
-        </button>
-        <button
-          type="button"
-          className="btn-small btn-danger"
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDelete();
-          }}
+          {task.prioridad || 'media'}
+        </PriorityBadge>
+        
+        {task.fechaCreacion && (
+          <TaskDate
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <FiCalendar />
+            {new Date(task.fechaCreacion).toLocaleDateString()}
+          </TaskDate>
+        )}
+      </TaskMeta>
+
+      {(task.createdBy || task.lastEditedBy) && (
+        <TaskFooter
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
         >
-          Eliminar
-        </button>
-      </div>
+          {task.createdBy && (
+            <AssignedUser>
+              <AvatarCircle title={task.createdBy.name || task.createdBy.email}>
+                {getInitials(task.createdBy)}
+              </AvatarCircle>
+              Creada por: {task.createdBy.name || task.createdBy.email || task.createdBy.id}
+              {task.fechaCreacion && (
+                <span> · {new Date(task.fechaCreacion).toLocaleString()}</span>
+              )}
+            </AssignedUser>
+          )}
+          {task.lastEditedBy && (
+            <AssignedUser>
+              <AvatarCircle title={task.lastEditedBy.name || task.lastEditedBy.email}>
+                {getInitials(task.lastEditedBy)}
+              </AvatarCircle>
+              Editada por: {task.lastEditedBy.name || task.lastEditedBy.email || task.lastEditedBy.id}
+              {task.lastEditedAt && (
+                <span> · {new Date(task.lastEditedAt).toLocaleString()}</span>
+              )}
+            </AssignedUser>
+          )}
+        </TaskFooter>
+      )}
+
       {isEditing &&
         createPortal(
           <TaskForm
             existingTask={task}
             onClose={() => {
-              console.log("Cerrar modal para task", task._id);
               setIsEditing(false);
             }}
+            onSave={handleEditSave}
           />,
           document.body
         )}
-      <div className="task-footer">
-        <span className="task-priority">{task.prioridad}</span>
-        {task.fechaCreacion && (
-          <span className="task-date">
-            {new Date(task.fechaCreacion).toLocaleDateString()}
-          </span>
-        )}
-      </div>
-    </div>
+    </TaskCard>
   );
 };
 
