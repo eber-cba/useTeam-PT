@@ -45,5 +45,5 @@ Aplicación tipo **Trello** que permite la gestión de tareas mediante un tabler
 
 ```bash
 git clone https://github.com/eber-cba/useTeam-PT.git
-cd useTeam-PT
+cd   useTeam-PT
 ```
