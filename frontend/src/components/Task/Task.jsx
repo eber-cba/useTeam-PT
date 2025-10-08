@@ -267,20 +267,21 @@ const Task = ({ task }) => {
               onMouseDown={preventDrag}
               onTouchStart={preventDrag}
             >
-              <MenuButton
-                onClick={handleMenuToggle}
-                $active={showMenu}
-                whileHover={{ scale: 1.1, rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
+              <ActionButton
+                variant="delete"
+                onClick={handleDelete}
+                whileHover={{ scale: 1.15, rotate: 12, y: -2 }}
+                whileTap={{ scale: 0.85 }}
+                title="Eliminar tarea"
                 onMouseDown={preventDrag}
                 onTouchStart={preventDrag}
               >
-                <FiMoreVertical />
-              </MenuButton>
+                <FiTrash2 />
+              </ActionButton>
 
               <ActionButton
                 variant="edit"
-                onClick={handleEditClick} // ahora usa el handler que hace stopPropagation
+                onClick={handleEditClick}
                 whileHover={{ scale: 1.15, rotate: 12, y: -2 }}
                 whileTap={{ scale: 0.85 }}
                 title="Editar tarea"
@@ -291,17 +292,13 @@ const Task = ({ task }) => {
               </ActionButton>
 
               <DragIndicator
-                // SOLO el DragIndicator tiene los listeners y attributes del draggable
                 $isHovered={isHovered}
                 whileHover={{ scale: 1.2, rotate: 180 }}
                 whileTap={{ scale: 0.9, rotate: 90 }}
                 title="Mover tarea"
                 {...attributes}
                 {...listeners}
-                // Asegurar que pulsar encima del handle no burbujee a la tarjeta
                 onMouseDown={(e) => {
-                  // importante: permitir que dnd-kit maneje el pointerdown,
-                  // pero evitar que otros listeners en el árbol reaccionen
                   e.stopPropagation();
                 }}
               >
