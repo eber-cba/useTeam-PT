@@ -1,123 +1,131 @@
-import { createGlobalStyle } from 'styled-components';
+import { createGlobalStyle } from "styled-components";
 
 // Definición del tema global
 export const theme = {
   colors: {
-    // Colores principales
-    primary: '#4299e1',
-    primaryDark: '#3182ce',
-    primaryLight: '#63b3ed',
-    
+    // Colores principales - Paleta moderna y vibrante
+    primary: "#6366f1",
+    primaryDark: "#4f46e5",
+    primaryLight: "#818cf8",
+
     // Colores secundarios
-    secondary: '#9f7aea',
-    secondaryDark: '#805ad5',
-    secondaryLight: '#b794f6',
-    
+    secondary: "#ec4899",
+    secondaryDark: "#db2777",
+    secondaryLight: "#f472b6",
+
     // Colores de estado
-    success: '#48bb78',
-    warning: '#ed8936',
-    error: '#f56565',
-    info: '#4299e1',
-    
+    success: "#10b981",
+    warning: "#f59e0b",
+    error: "#ef4444",
+    info: "#3b82f6",
+
     // Colores de texto
-    text: '#2d3748',
-    textSecondary: '#718096',
-    textLight: '#a0aec0',
-    textInverse: '#ffffff',
-    
-    // Colores de fondo
-    background: '#ffffff',
-    backgroundSecondary: '#f7fafc',
-    backgroundTertiary: '#edf2f7',
-    
+    text: "#1f2937",
+    textSecondary: "#6b7280",
+    textLight: "#9ca3af",
+    textInverse: "#ffffff",
+
+    // Colores de fondo - Gradientes modernos
+    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    backgroundSecondary: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    backgroundTertiary: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+    backgroundCard: "rgba(255, 255, 255, 0.95)",
+    backgroundGlass: "rgba(255, 255, 255, 0.1)",
+
     // Colores de borde
-    border: '#e2e8f0',
-    borderLight: '#f1f5f9',
-    borderDark: '#cbd5e0',
-    
-    // Gradientes
-    gradientPrimary: 'linear-gradient(135deg, #4299e1 0%, #9f7aea 100%)',
-    gradientSecondary: 'linear-gradient(135deg, #48bb78 0%, #38b2ac 100%)',
-    gradientWarning: 'linear-gradient(135deg, #ed8936 0%, #f6ad55 100%)',
-    gradientError: 'linear-gradient(135deg, #f56565 0%, #fc8181 100%)',
-    
+    border: "rgba(255, 255, 255, 0.2)",
+    borderLight: "rgba(255, 255, 255, 0.1)",
+    borderDark: "rgba(255, 255, 255, 0.3)",
+
+    // Gradientes modernos
+    gradientPrimary: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    gradientSecondary: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    gradientSuccess: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+    gradientWarning: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+    gradientError: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+    gradientInfo: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+    gradientGlass:
+      "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)",
+
     // Colores con transparencia
-    overlay: 'rgba(0, 0, 0, 0.6)',
-    glass: 'rgba(255, 255, 255, 0.95)',
-    glassSecondary: 'rgba(255, 255, 255, 0.8)',
+    overlay: "rgba(0, 0, 0, 0.6)",
+    glass: "rgba(255, 255, 255, 0.95)",
+    glassSecondary: "rgba(255, 255, 255, 0.8)",
+    glassDark: "rgba(0, 0, 0, 0.1)",
   },
-  
+
   // Espaciado
   spacing: {
-    xs: '0.25rem',   // 4px
-    sm: '0.5rem',    // 8px
-    md: '1rem',      // 16px
-    lg: '1.5rem',    // 24px
-    xl: '2rem',      // 32px
-    '2xl': '3rem',   // 48px
-    '3xl': '4rem',   // 64px
+    xs: "0.25rem", // 4px
+    sm: "0.5rem", // 8px
+    md: "1rem", // 16px
+    lg: "1.5rem", // 24px
+    xl: "2rem", // 32px
+    "2xl": "3rem", // 48px
+    "3xl": "4rem", // 64px
   },
-  
+
   // Tipografía
   fonts: {
     body: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-    heading: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    heading:
+      '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     mono: '"Fira Code", "Monaco", "Cascadia Code", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", monospace',
   },
-  
+
   fontSizes: {
-    xs: '0.75rem',   // 12px
-    sm: '0.875rem',  // 14px
-    md: '1rem',      // 16px
-    lg: '1.125rem',  // 18px
-    xl: '1.25rem',   // 20px
-    '2xl': '1.5rem', // 24px
-    '3xl': '1.875rem', // 30px
-    '4xl': '2.25rem',  // 36px
+    xs: "0.75rem", // 12px
+    sm: "0.875rem", // 14px
+    md: "1rem", // 16px
+    lg: "1.125rem", // 18px
+    xl: "1.25rem", // 20px
+    "2xl": "1.5rem", // 24px
+    "3xl": "1.875rem", // 30px
+    "4xl": "2.25rem", // 36px
   },
-  
+
   fontWeights: {
     normal: 400,
     medium: 500,
     semibold: 600,
     bold: 700,
   },
-  
+
   lineHeights: {
     tight: 1.25,
     normal: 1.5,
     relaxed: 1.75,
   },
-  
+
   // Bordes
   borderRadius: {
-    none: '0',
-    sm: '0.25rem',   // 4px
-    md: '0.5rem',    // 8px
-    lg: '0.75rem',   // 12px
-    xl: '1rem',      // 16px
-    '2xl': '1.5rem', // 24px
-    full: '9999px',
+    none: "0",
+    sm: "0.25rem", // 4px
+    md: "0.5rem", // 8px
+    lg: "0.75rem", // 12px
+    xl: "1rem", // 16px
+    "2xl": "1.5rem", // 24px
+    full: "9999px",
   },
-  
+
   // Sombras
   shadows: {
-    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-    inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
-    none: 'none',
+    sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+    md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+    xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+    "2xl": "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+    inner: "inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)",
+    none: "none",
   },
-  
+
   // Transiciones
   transitions: {
-    fast: '0.15s ease',
-    normal: '0.3s ease',
-    slow: '0.5s ease',
+    fast: "0.15s ease",
+    normal: "0.3s ease",
+    slow: "0.5s ease",
   },
-  
+
   // Z-index
   zIndex: {
     dropdown: 1000,
@@ -128,14 +136,14 @@ export const theme = {
     tooltip: 1060,
     toast: 1070,
   },
-  
+
   // Breakpoints
   breakpoints: {
-    sm: '640px',
-    md: '768px',
-    lg: '1024px',
-    xl: '1280px',
-    '2xl': '1536px',
+    sm: "640px",
+    md: "768px",
+    lg: "1024px",
+    xl: "1280px",
+    "2xl": "1536px",
   },
 };
 
@@ -162,10 +170,33 @@ export const GlobalStyle = createGlobalStyle`
     font-weight: ${theme.fontWeights.normal};
     line-height: ${theme.lineHeights.normal};
     color: ${theme.colors.text};
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background: ${theme.colors.background};
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    position: relative;
+    overflow-x: hidden;
+  }
+  
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+      radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+    z-index: -1;
+    animation: backgroundShift 20s ease-in-out infinite;
+  }
+  
+  @keyframes backgroundShift {
+    0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+    33% { transform: translateX(-20px) translateY(-10px) rotate(1deg); }
+    66% { transform: translateX(10px) translateY(-20px) rotate(-1deg); }
   }
   
   /* Headings */
@@ -176,9 +207,9 @@ export const GlobalStyle = createGlobalStyle`
     color: ${theme.colors.text};
   }
   
-  h1 { font-size: ${theme.fontSizes['4xl']}; }
-  h2 { font-size: ${theme.fontSizes['3xl']}; }
-  h3 { font-size: ${theme.fontSizes['2xl']}; }
+  h1 { font-size: ${theme.fontSizes["4xl"]}; }
+  h2 { font-size: ${theme.fontSizes["3xl"]}; }
+  h3 { font-size: ${theme.fontSizes["2xl"]}; }
   h4 { font-size: ${theme.fontSizes.xl}; }
   h5 { font-size: ${theme.fontSizes.lg}; }
   h6 { font-size: ${theme.fontSizes.md}; }
@@ -327,8 +358,8 @@ export const GlobalStyle = createGlobalStyle`
       font-size: ${theme.fontSizes.sm};
     }
     
-    h1 { font-size: ${theme.fontSizes['3xl']}; }
-    h2 { font-size: ${theme.fontSizes['2xl']}; }
+    h1 { font-size: ${theme.fontSizes["3xl"]}; }
+    h2 { font-size: ${theme.fontSizes["2xl"]}; }
     h3 { font-size: ${theme.fontSizes.xl}; }
   }
   

@@ -1,7 +1,15 @@
 import React, { useState } from "react";
-import { ThemeProvider } from 'styled-components';
-import { GlobalStyle, theme } from './theme/GlobalTheme';
-import { FiGrid, FiMenu, FiX, FiArrowRight, FiUsers, FiTrendingUp, FiZap } from 'react-icons/fi';
+import { ThemeProvider } from "styled-components";
+import { GlobalStyle, theme } from "./theme/GlobalTheme";
+import {
+  FiGrid,
+  FiMenu,
+  FiX,
+  FiArrowRight,
+  FiUsers,
+  FiTrendingUp,
+  FiZap,
+} from "react-icons/fi";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { KanbanProvider } from "./context/KanbanContext";
 import { ToastProvider } from "./context/ToastContext";
@@ -11,12 +19,12 @@ import ConnectionStatus from "./components/ConnectionStatus/ConnectionStatus";
 import AuthModal from "./components/Auth/AuthModal";
 import UserInfo from "./components/UserInfo/UserInfo";
 import CollaborationPanel from "./components/CollaborationPanel/CollaborationPanel";
-import { 
-  AppContainer, 
-  AppTitle, 
+import {
+  AppContainer,
+  AppTitle,
   AppSubtitle,
-  Button 
-} from './components/UI/StyledComponents';
+  Button,
+} from "./components/UI/StyledComponents";
 import {
   MainLayout,
   TopBar,
@@ -30,10 +38,10 @@ import {
   Overlay,
   BoardContainer,
   QuickActions,
-  MobileMenuButton
-} from './components/Layout/StyledLayout';
-import { motion } from 'framer-motion';
-import styled from 'styled-components';
+  MobileMenuButton,
+} from "./components/Layout/StyledLayout";
+import { motion } from "framer-motion";
+import styled from "styled-components";
 
 // Styled components para la página de inicio
 const AnimatedBackground = styled.div`
@@ -51,7 +59,7 @@ const FloatingElement = styled(motion.div)`
   font-size: 2rem;
   opacity: 0.7;
   pointer-events: none;
-  filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
 `;
 
 const LandingContent = styled(motion.div)`
@@ -85,13 +93,13 @@ const FeaturesGrid = styled(motion.div)`
 `;
 
 const FeatureCard = styled(motion.div)`
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   padding: 2rem;
   border-radius: 20px;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   text-align: center;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 `;
 
 const FeatureIcon = styled.div`
@@ -107,7 +115,7 @@ const FeatureTitle = styled.h3`
 `;
 
 const FeatureDescription = styled.p`
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 1rem;
   line-height: 1.6;
 `;
@@ -121,7 +129,7 @@ const ActionsSection = styled(motion.div)`
 `;
 
 const PrimaryButton = styled(motion.button)`
-  background: rgba(255,255,255,0.9);
+  background: rgba(255, 255, 255, 0.9);
   color: #667eea;
   border: none;
   padding: 1rem 2.5rem;
@@ -133,14 +141,14 @@ const PrimaryButton = styled(motion.button)`
   gap: 0.5rem;
   cursor: pointer;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 `;
 
 const SecondaryButton = styled(motion.button)`
   background: transparent;
   color: white;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   padding: 1rem 2.5rem;
   font-size: 1.1rem;
   font-weight: 600;
@@ -160,7 +168,7 @@ const ButtonIcon = styled.span`
 // Componente de página de inicio
 const LandingPage = ({ onLogin, onRegister }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState('login');
+  const [authMode, setAuthMode] = useState("login");
 
   return (
     <>
@@ -169,15 +177,15 @@ const LandingPage = ({ onLogin, onRegister }) => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
         style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px',
-          position: 'relative',
-          overflow: 'hidden'
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "20px",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
         {/* Fondo animado mejorado */}
@@ -186,14 +194,14 @@ const LandingPage = ({ onLogin, onRegister }) => {
             animate={{
               y: [0, -20, 0],
               x: [0, 10, 0],
-              rotate: [0, 5, 0]
+              rotate: [0, 5, 0],
             }}
             transition={{
               duration: 6,
               repeat: Infinity,
-              ease: "easeInOut"
+              ease: "easeInOut",
             }}
-            style={{ top: '10%', left: '10%' }}
+            style={{ top: "10%", left: "10%" }}
           >
             ✨
           </FloatingElement>
@@ -201,14 +209,14 @@ const LandingPage = ({ onLogin, onRegister }) => {
             animate={{
               y: [0, 15, 0],
               x: [0, -15, 0],
-              rotate: [0, -3, 0]
+              rotate: [0, -3, 0],
             }}
             transition={{
               duration: 8,
               repeat: Infinity,
-              ease: "easeInOut"
+              ease: "easeInOut",
             }}
-            style={{ top: '20%', right: '15%' }}
+            style={{ top: "20%", right: "15%" }}
           >
             🚀
           </FloatingElement>
@@ -216,14 +224,14 @@ const LandingPage = ({ onLogin, onRegister }) => {
             animate={{
               y: [0, -25, 0],
               x: [0, 20, 0],
-              scale: [1, 1.1, 1]
+              scale: [1, 1.1, 1],
             }}
             transition={{
               duration: 7,
               repeat: Infinity,
-              ease: "easeInOut"
+              ease: "easeInOut",
             }}
-            style={{ bottom: '20%', left: '20%' }}
+            style={{ bottom: "20%", left: "20%" }}
           >
             💼
           </FloatingElement>
@@ -231,14 +239,14 @@ const LandingPage = ({ onLogin, onRegister }) => {
             animate={{
               y: [0, 20, 0],
               x: [0, -10, 0],
-              rotate: [0, 8, 0]
+              rotate: [0, 8, 0],
             }}
             transition={{
               duration: 5,
               repeat: Infinity,
-              ease: "easeInOut"
+              ease: "easeInOut",
             }}
-            style={{ bottom: '15%', right: '10%' }}
+            style={{ bottom: "15%", right: "10%" }}
           >
             📊
           </FloatingElement>
@@ -265,12 +273,12 @@ const LandingPage = ({ onLogin, onRegister }) => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.6 }}
               style={{
-                fontSize: '3.5rem',
-                fontWeight: '800',
-                background: 'linear-gradient(45deg, #fff, #f0f0f0)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: '10px'
+                fontSize: "3.5rem",
+                fontWeight: "800",
+                background: "linear-gradient(45deg, #fff, #f0f0f0)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                marginBottom: "10px",
               }}
             >
               Kanban Team
@@ -280,9 +288,9 @@ const LandingPage = ({ onLogin, onRegister }) => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.8 }}
               style={{
-                fontSize: '1.3rem',
-                color: 'rgba(255,255,255,0.9)',
-                fontWeight: '300'
+                fontSize: "1.3rem",
+                color: "rgba(255,255,255,0.9)",
+                fontWeight: "300",
               }}
             >
               Organiza tu trabajo de manera inteligente
@@ -301,7 +309,8 @@ const LandingPage = ({ onLogin, onRegister }) => {
               <FeatureIcon>🎯</FeatureIcon>
               <FeatureTitle>Gestión Visual</FeatureTitle>
               <FeatureDescription>
-                Visualiza el progreso de tus proyectos con tableros Kanban intuitivos
+                Visualiza el progreso de tus proyectos con tableros Kanban
+                intuitivos
               </FeatureDescription>
             </FeatureCard>
 
@@ -312,7 +321,8 @@ const LandingPage = ({ onLogin, onRegister }) => {
               <FeatureIcon>⚡</FeatureIcon>
               <FeatureTitle>Tiempo Real</FeatureTitle>
               <FeatureDescription>
-                Colabora con tu equipo en tiempo real y mantente siempre sincronizado
+                Colabora con tu equipo en tiempo real y mantente siempre
+                sincronizado
               </FeatureDescription>
             </FeatureCard>
 
@@ -336,7 +346,7 @@ const LandingPage = ({ onLogin, onRegister }) => {
             <PrimaryButton
               onClick={() => {
                 setShowAuthModal(true);
-                setAuthMode('login');
+                setAuthMode("login");
               }}
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.98 }}
@@ -344,16 +354,16 @@ const LandingPage = ({ onLogin, onRegister }) => {
               <ButtonIcon>🚀</ButtonIcon>
               Iniciar Sesión
             </PrimaryButton>
-            
+
             <SecondaryButton
               onClick={() => {
                 setShowAuthModal(true);
-                setAuthMode('register');
+                setAuthMode("register");
               }}
               whileHover={{
                 scale: 1.05,
                 y: -2,
-                background: "rgba(255,255,255,0.15)"
+                background: "rgba(255,255,255,0.15)",
               }}
               whileTap={{ scale: 0.98 }}
             >
@@ -363,7 +373,7 @@ const LandingPage = ({ onLogin, onRegister }) => {
           </ActionsSection>
         </LandingContent>
       </AppContainer>
-      
+
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
@@ -376,7 +386,7 @@ const LandingPage = ({ onLogin, onRegister }) => {
 function AppContent() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); // 'login' o 'register'
+  const [authMode, setAuthMode] = useState("login"); // 'login' o 'register'
   const [showSidePanel, setShowSidePanel] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -391,13 +401,13 @@ function AppContent() {
       >
         <LoadingContainer
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100vh',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white'
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100vh",
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            color: "white",
           }}
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
@@ -405,18 +415,18 @@ function AppContent() {
         >
           <motion.div
             style={{
-              width: '60px',
-              height: '60px',
-              border: '4px solid rgba(255,255,255,0.3)',
-              borderTop: '4px solid white',
-              borderRadius: '50%',
-              marginBottom: '20px'
+              width: "60px",
+              height: "60px",
+              border: "4px solid rgba(255,255,255,0.3)",
+              borderTop: "4px solid white",
+              borderRadius: "50%",
+              marginBottom: "20px",
             }}
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           />
           <motion.p
-            style={{ fontSize: '1.3rem', fontWeight: '300' }}
+            style={{ fontSize: "1.3rem", fontWeight: "300" }}
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
@@ -446,18 +456,14 @@ function AppContent() {
           transition={{ duration: 0.4 }}
         >
           <TopBarLeft>
-            <AppLogo
-               whileHover={{ scale: 1.05 }}
-               whileTap={{ scale: 0.95 }}
-             >
-               <FiGrid />
-               <span>Kanban Team</span>
-             </AppLogo>
+            <AppLogo whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <FiGrid />
+              <span>Kanban Team</span>
+            </AppLogo>
           </TopBarLeft>
-          
+
           <TopBarRight>
             <QuickActions>
-              <ConnectionStatus />
               <UserInfo />
             </QuickActions>
             <MobileMenuButton
@@ -499,7 +505,6 @@ function AppContent() {
           transition={{ duration: 0.4, delay: 0.2 }}
         >
           <span>Tablero Kanban Colaborativo v1.0</span>
-          <ConnectionStatus />
         </StatusBar>
       </MainLayout>
     </KanbanProvider>

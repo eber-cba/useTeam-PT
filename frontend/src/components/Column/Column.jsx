@@ -9,7 +9,6 @@ import {
   ColumnHeader,
   ColumnTitle,
   ColumnTitleInput,
-  TaskCount,
   ColumnActions,
   ActionIcon,
   TasksContainer,
@@ -105,10 +104,15 @@ export default function Column({ column, children }) {
       style={style}
       isOver={isOver}
       {...attributes}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -30, scale: 0.9 }}
+      transition={{
+        duration: 0.5,
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      }}
     >
       <ColumnHeader>
         {editing ? (
@@ -158,39 +162,52 @@ export default function Column({ column, children }) {
               <span
                 style={{
                   fontSize: "0.85rem",
-                  color: "#888",
-                  marginTop: "2px",
+                  color: "rgba(255, 255, 255, 0.7)",
+                  marginTop: "8px",
                   display: "block",
+                  fontWeight: "500",
                 }}
               >
                 Creada por {column.createdBy}
               </span>
             )}
-            <TaskCount
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            >
-              {children ? React.Children.count(children) : 0}
-            </TaskCount>
             <ColumnActions>
               <ActionIcon
                 onClick={() => setEditing(true)}
                 variant="edit"
-                whileHover={{ scale: 1.1 }}
+                whileHover={{
+                  scale: 1.1,
+                  rotate: 5,
+                  y: -2,
+                }}
                 whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300 }}
               >
                 <FiEdit2 />
               </ActionIcon>
               <ActionIcon
                 onClick={onDelete}
                 variant="delete"
-                whileHover={{ scale: 1.1 }}
+                whileHover={{
+                  scale: 1.1,
+                  rotate: -5,
+                  y: -2,
+                }}
                 whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300 }}
               >
                 <FiTrash2 />
               </ActionIcon>
-              <DragHandle {...listeners}>
+              <DragHandle
+                {...listeners}
+                whileHover={{
+                  scale: 1.1,
+                  rotate: 10,
+                  y: -2,
+                }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
                 <FiMenu />
               </DragHandle>
             </ColumnActions>
@@ -199,19 +216,29 @@ export default function Column({ column, children }) {
       </ColumnHeader>
 
       <TasksContainer
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1, duration: 0.3 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          delay: 0.2,
+          duration: 0.4,
+          type: "spring",
+          stiffness: 100,
+        }}
       >
         {children && React.Children.count(children) > 0 ? (
           children
         ) : (
           <EmptyColumnMessage
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.3 }}
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{
+              delay: 0.4,
+              duration: 0.5,
+              type: "spring",
+              stiffness: 80,
+            }}
           >
-            <p>No hay tareas aquí</p>
+            <p>✨ No hay tareas aquí</p>
             <p>Arrastra una tarea o crea una nueva</p>
           </EmptyColumnMessage>
         )}

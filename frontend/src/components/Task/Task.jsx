@@ -4,7 +4,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { useKanban } from "../../context/KanbanContext";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-import { FiEdit2, FiTrash2, FiUser, FiCalendar, FiMove } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiUser, FiCalendar, FiMove } from "react-icons/fi";
 import TaskForm from "../TaskForm/TaskForm";
 import {
   TaskCard,
@@ -19,8 +19,8 @@ import {
   AssignedUser,
   TaskFooter,
   DragIndicator,
-  AvatarCircle
-} from './StyledTask';
+  AvatarCircle,
+} from "./StyledTask";
 
 const Task = ({ task }) => {
   const { moveTask, updateTask, deleteTask } = useKanban();
@@ -54,10 +54,13 @@ const Task = ({ task }) => {
   };
 
   const getInitials = (user) => {
-    const label = (user?.name || user?.email || user?.id || '').trim();
-    if (!label) return '?';
+    const label = (user?.name || user?.email || user?.id || "").trim();
+    if (!label) return "?";
     const parts = label.split(/\s|\./).filter(Boolean);
-    const initials = parts.slice(0, 2).map(p => p[0].toUpperCase()).join('');
+    const initials = parts
+      .slice(0, 2)
+      .map((p) => p[0].toUpperCase())
+      .join("");
     return initials || label[0].toUpperCase();
   };
 
@@ -107,23 +110,28 @@ const Task = ({ task }) => {
         e.stopPropagation();
         setIsEditing(true);
       }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ y: -2 }}
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -30, scale: 0.9 }}
+      transition={{
+        duration: 0.5,
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      }}
+      whileHover={{
+        y: -8,
+        scale: 1.02,
+        transition: { type: "spring", stiffness: 300 },
+      }}
       whileTap={{ scale: 0.98 }}
     >
       <DragIndicator>
         <FiMove />
       </DragIndicator>
-      
+
       <TaskHeader>
-        <TaskTitle
-          whileHover={{ scale: 1.02 }}
-        >
-          {task.titulo}
-        </TaskTitle>
+        <TaskTitle whileHover={{ scale: 1.02 }}>{task.titulo}</TaskTitle>
         <TaskActions>
           <ActionButton
             variant="edit"
@@ -133,8 +141,13 @@ const Task = ({ task }) => {
               e.stopPropagation();
               setIsEditing(true);
             }}
-            whileHover={{ scale: 1.1 }}
+            whileHover={{
+              scale: 1.1,
+              rotate: 5,
+              y: -2,
+            }}
             whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300 }}
             title="Editar tarea"
           >
             <FiEdit2 />
@@ -147,8 +160,13 @@ const Task = ({ task }) => {
               e.stopPropagation();
               handleDelete();
             }}
-            whileHover={{ scale: 1.1 }}
+            whileHover={{
+              scale: 1.1,
+              rotate: -5,
+              y: -2,
+            }}
             whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300 }}
             title="Eliminar tarea"
           >
             <FiTrash2 />
@@ -167,15 +185,15 @@ const Task = ({ task }) => {
       )}
 
       <TaskMeta>
-        <PriorityBadge 
+        <PriorityBadge
           priority={task.prioridad}
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
         >
-          {task.prioridad || 'media'}
+          {task.prioridad || "media"}
         </PriorityBadge>
-        
+
         {task.fechaCreacion && (
           <TaskDate
             initial={{ opacity: 0, x: 10 }}
@@ -199,7 +217,8 @@ const Task = ({ task }) => {
               <AvatarCircle title={task.createdBy.name || task.createdBy.email}>
                 {getInitials(task.createdBy)}
               </AvatarCircle>
-              Creada por: {task.createdBy.name || task.createdBy.email || task.createdBy.id}
+              Creada por:{" "}
+              {task.createdBy.name || task.createdBy.email || task.createdBy.id}
               {task.fechaCreacion && (
                 <span> · {new Date(task.fechaCreacion).toLocaleString()}</span>
               )}
@@ -207,10 +226,15 @@ const Task = ({ task }) => {
           )}
           {task.lastEditedBy && (
             <AssignedUser>
-              <AvatarCircle title={task.lastEditedBy.name || task.lastEditedBy.email}>
+              <AvatarCircle
+                title={task.lastEditedBy.name || task.lastEditedBy.email}
+              >
                 {getInitials(task.lastEditedBy)}
               </AvatarCircle>
-              Editada por: {task.lastEditedBy.name || task.lastEditedBy.email || task.lastEditedBy.id}
+              Editada por:{" "}
+              {task.lastEditedBy.name ||
+                task.lastEditedBy.email ||
+                task.lastEditedBy.id}
               {task.lastEditedAt && (
                 <span> · {new Date(task.lastEditedAt).toLocaleString()}</span>
               )}
