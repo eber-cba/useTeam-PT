@@ -1,799 +1,612 @@
+// StyledTask.js
 import styled from "styled-components";
 import { motion } from "framer-motion";
 
+// Función para obtener colores de prioridad
+const getPriorityColors = (priority) => {
+  const colors = {
+    alta: {
+      gradient: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+      glow: "rgba(239, 68, 68, 0.4)",
+      light: "rgba(239, 68, 68, 0.1)",
+      shadow: "rgba(239, 68, 68, 0.3)",
+    },
+    media: {
+      gradient: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+      glow: "rgba(245, 158, 11, 0.4)",
+      light: "rgba(245, 158, 11, 0.1)",
+      shadow: "rgba(245, 158, 11, 0.3)",
+    },
+    baja: {
+      gradient: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+      glow: "rgba(16, 185, 129, 0.4)",
+      light: "rgba(16, 185, 129, 0.1)",
+      shadow: "rgba(16, 185, 129, 0.3)",
+    },
+    default: {
+      gradient: "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)",
+      glow: "rgba(102, 126, 234, 0.4)",
+      light: "rgba(102, 126, 234, 0.1)",
+      shadow: "rgba(102, 126, 234, 0.3)",
+    },
+  };
+  return colors[priority] || colors.default;
+};
+
+// Función para colores de estado
+const getStatusColors = (status) => {
+  const colors = {
+    completada: {
+      background: "rgba(16, 185, 129, 0.2)",
+      color: "#10b981",
+      border: "rgba(16, 185, 129, 0.3)",
+    },
+    progreso: {
+      background: "rgba(59, 130, 246, 0.2)",
+      color: "#3b82f6",
+      border: "rgba(59, 130, 246, 0.3)",
+    },
+    pendiente: {
+      background: "rgba(245, 158, 11, 0.2)",
+      color: "#f59e0b",
+      border: "rgba(245, 158, 11, 0.3)",
+    },
+    default: {
+      background: "rgba(255, 255, 255, 0.1)",
+      color: "rgba(255, 255, 255, 0.8)",
+      border: "rgba(255, 255, 255, 0.2)",
+    },
+  };
+  return colors[status] || colors.default;
+};
+
 export const TaskCard = styled(motion.div).withConfig({
-  shouldForwardProp: (prop) => !["isDragging", "priority"].includes(prop),
+  shouldForwardProp: (prop) =>
+    !["$isDragging", "$priority", "$isHovered"].includes(prop),
 })`
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(255, 255, 255, 0.95) 50%,
-    rgba(248, 250, 252, 0.98) 100%
-  );
-  backdrop-filter: blur(25px) saturate(180%);
-  border-radius: 24px;
-  padding: ${(props) => props.theme.spacing.lg};
-  margin-bottom: ${(props) => props.theme.spacing.md};
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), 0 6px 16px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  cursor: pointer;
-  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 0;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  cursor: grab;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-style: preserve-3d;
+  perspective: 1000px;
   overflow: hidden;
-  opacity: ${(props) => (props.isDragging ? 0.8 : 1)};
-  transform: ${(props) =>
-    props.isDragging ? "rotate(8deg) scale(1.05)" : "rotate(0deg) scale(1)"};
-  z-index: ${(props) => (props.isDragging ? 1000 : 1)};
-  cursor: ${(props) => (props.isDragging ? "grabbing" : "grab")};
 
-  /* Borde superior con gradiente animado */
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 6px;
-    background: ${(props) => {
-      switch (props.priority) {
-        case "alta":
-          return "linear-gradient(90deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)";
-        case "media":
-          return "linear-gradient(90deg, #f59e0b 0%, #d97706 50%, #b45309 100%)";
-        case "baja":
-          return "linear-gradient(90deg, #10b981 0%, #059669 50%, #047857 100%)";
-        default:
-          return "linear-gradient(90deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 50%, rgba(240, 147, 251, 0.3) 100%)";
-      }
-    }};
-    border-radius: 24px 24px 0 0;
-    transition: all 0.4s ease;
-  }
-
-  /* Efecto de brillo animado */
-  &::after {
-    content: "";
-    position: absolute;
-    top: -100%;
-    left: -100%;
-    width: 300%;
-    height: 300%;
-    background: radial-gradient(
-      circle,
-      rgba(255, 255, 255, 0.08) 0%,
-      rgba(102, 126, 234, 0.03) 30%,
-      transparent 70%
-    );
-    opacity: 0;
-    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    pointer-events: none;
-    animation: taskShimmer 4s ease-in-out infinite;
-  }
-
-  @keyframes taskShimmer {
-    0%,
-    100% {
-      opacity: 0;
-      transform: translateX(-100%) translateY(-100%) rotate(0deg);
-    }
-    50% {
-      opacity: 1;
-      transform: translateX(-50%) translateY(-50%) rotate(180deg);
-    }
-  }
-
-  &:hover {
-    transform: translateY(-12px) scale(1.03) rotateX(2deg);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.12), 0 12px 24px rgba(0, 0, 0, 0.08),
-      0 6px 12px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.4),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
-    border-color: rgba(102, 126, 234, 0.4);
-
-    &::before {
-      height: 10px;
-      background: ${(props) => {
-        switch (props.priority) {
-          case "alta":
-            return "linear-gradient(90deg, #ef4444 0%, #dc2626 25%, #b91c1c 50%, #991b1b 75%, #7f1d1d 100%)";
-          case "media":
-            return "linear-gradient(90deg, #f59e0b 0%, #d97706 25%, #b45309 50%, #92400e 75%, #78350f 100%)";
-          case "baja":
-            return "linear-gradient(90deg, #10b981 0%, #059669 25%, #047857 50%, #065f46 75%, #064e3b 100%)";
-          default:
-            return "linear-gradient(90deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)";
-        }
-      }};
-      animation: priorityPulse 2s ease-in-out infinite;
-    }
-
-    &::after {
-      opacity: 1;
-      animation-duration: 2s;
-    }
-  }
-
-  @keyframes priorityPulse {
-    0%,
-    100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-  }
-
-  &:active {
-    transform: translateY(-8px) scale(1.02);
-  }
-
-  /* Efecto de pulso para tareas de alta prioridad */
+  /* Estados */
   ${(props) =>
-    props.priority === "alta" &&
+    props.$isHovered &&
     `
-    &::before {
-      animation: highPriorityGlow 2s ease-in-out infinite;
-    }
-    
-    @keyframes highPriorityGlow {
-      0%, 100% { 
-        box-shadow: 0 0 5px rgba(239, 68, 68, 0.3);
-      }
-      50% { 
-        box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
-      }
-    }
-  `}
-
-  /* Efectos especiales durante el drag */
-  ${(props) =>
-    props.isDragging &&
-    `
-    &::before {
-      height: 12px !important;
-      background: linear-gradient(90deg, 
-        #667eea 0%, 
-        #764ba2 25%, 
-        #f093fb 50%, 
-        #f5576c 75%, 
-        #4facfe 100%
-      ) !important;
-      animation: dragPriorityPulse 0.8s ease-in-out infinite !important;
-    }
-
-    &::after {
-      opacity: 1 !important;
-      animation: dragShimmer 1s ease-in-out infinite !important;
-    }
-
+    transform: translateY(-8px) scale(1.02) rotateX(2deg);
     box-shadow: 
-      0 30px 60px rgba(0, 0, 0, 0.2),
-      0 15px 30px rgba(0, 0, 0, 0.15),
-      0 8px 16px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.6),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.1) !important;
-    border-color: rgba(102, 126, 234, 0.6) !important;
-
-    @keyframes dragPriorityPulse {
-      0%, 100% { 
-        background-position: 0% 50%;
-        opacity: 1;
-      }
-      50% { 
-        background-position: 100% 50%;
-        opacity: 0.8;
-      }
-    }
-
-    @keyframes dragShimmer {
-      0%, 100% { 
-        transform: translateX(-100%) translateY(-100%) rotate(0deg);
-        opacity: 0.6;
-      }
-      50% { 
-        transform: translateX(-50%) translateY(-50%) rotate(180deg);
-        opacity: 1;
-      }
-    }
+      0 20px 60px rgba(0, 0, 0, 0.15),
+      0 8px 32px rgba(255, 255, 255, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
   `}
+
+  ${(props) =>
+    props.$isDragging &&
+    `
+    transform: rotate(8deg) scale(1.05) rotateX(10deg) !important;
+    box-shadow: 
+      0 40px 80px rgba(0, 0, 0, 0.25),
+      0 20px 40px rgba(255, 255, 255, 0.1) !important;
+    cursor: grabbing;
+    z-index: 1000 !important;
+    border-color: ${getPriorityColors(props.$priority).glow} !important;
+  `}
+
+  @media (max-width: 768px) {
+    margin-bottom: 12px;
+    border-radius: 16px;
+  }
 `;
 
-export const TaskHeader = styled(motion.div)`
+export const TaskLayers = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+`;
+
+export const DepthLayer = styled.div.attrs((props) => ({
+  style: {
+    transform: `translateZ(${props.$depth * 2}px)`,
+  },
+}))`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: inherit;
+  transition: transform 0.3s ease;
+`;
+
+export const ShimmerLayer = styled.div.attrs((props) => ({
+  style: {
+    opacity: props.$active ? 1 : 0,
+  },
+}))`
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  transform: rotate(30deg)
+    translateY(${(props) => (props.$active ? "100%" : "0%")});
+  transition: transform 0.8s ease, opacity 0.4s ease;
+`;
+
+export const HoverEffect = styled.div.attrs((props) => ({
+  style: {
+    opacity: props.$active ? 0.6 : 0,
+    background: `radial-gradient(circle at center, ${props.$glowColor} 0%, transparent 70%)`,
+  },
+}))`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.4s ease;
+  filter: blur(20px);
+`;
+
+export const TaskGlow = styled.div.attrs((props) => ({
+  style: {
+    background: getPriorityColors(props.$priority).gradient,
+    opacity: props.$isHovered ? 0.8 : 0.4,
+  },
+}))`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  transition: all 0.4s ease;
+`;
+
+export const TaskContent = styled.div`
+  position: relative;
+  z-index: 2;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    gap: 12px;
+  }
+`;
+
+export const TaskHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: ${(props) => props.theme.spacing.lg};
-  gap: ${(props) => props.theme.spacing.md};
-  position: relative;
+  gap: 12px;
 
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: -12px;
-    left: 0;
-    width: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    border-radius: 0 0 2px 2px;
-  }
+  .title-section {
+    flex: 1;
+    min-width: 0;
 
-  &:hover::after {
-    width: 100%;
+    .mobile-meta {
+      display: none;
+
+      @media (max-width: 768px) {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+      }
+    }
   }
 `;
 
-export const TaskTitle = styled(motion.h4)`
-  font-size: 1.3rem;
+export const TaskTitle = styled(motion.h4).withConfig({
+  shouldForwardProp: (prop) => !["$priority"].includes(prop),
+})`
+  font-size: 1.1rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #1f2937 0%, #374151 50%, #4b5563 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: rgba(255, 255, 255, 0.95);
   margin: 0;
-  flex: 1;
   line-height: 1.4;
   word-break: break-word;
-  white-space: pre-line;
-  overflow: visible;
-  text-overflow: unset;
-  max-width: 100%;
-  min-width: 0;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  position: relative;
-  display: block;
-
-  @media (max-width: 600px) {
-    font-size: 1.05rem;
-    line-height: 1.3;
-    word-break: break-word;
-    max-width: 100%;
-  }
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(102, 126, 234, 0.1) 50%,
-      transparent 100%
-    );
-    transition: left 0.6s ease;
-  }
-
-  &:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    transform: translateX(6px) scale(1.02);
-
-    &::before {
-      left: 100%;
-    }
-  }
-`;
-
-export const TaskActions = styled(motion.div)`
-  display: flex;
-  gap: ${(props) => props.theme.spacing.sm};
-  opacity: 0;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  transform: translateY(-15px) scale(0.9);
-
-  ${TaskCard}:hover & {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-`;
-
-export const ActionButton = styled(motion.button)`
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(248, 250, 252, 0.1) 100%
-  );
-  border: 1px solid rgba(255, 255, 255, 0.25);
   cursor: pointer;
-  padding: 10px;
-  border-radius: 14px;
-  color: ${(props) => props.theme.colors.textSecondary};
-  font-size: 1.1rem;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(15px);
+  transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
-  min-width: 40px;
-  min-height: 40px;
+
+  /* Prevenir selección de texto durante drag */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 
   &::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: ${(props) => {
-      switch (props.variant) {
-        case "edit":
-          return "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)";
-        case "delete":
-          return "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)";
-        default:
-          return "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)";
-      }
-    }};
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: radial-gradient(
-      circle,
-      rgba(255, 255, 255, 0.3) 0%,
-      transparent 70%
-    );
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-  }
-
-  &:hover {
-    background: ${(props) => {
-      switch (props.variant) {
-        case "edit":
-          return "linear-gradient(145deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%)";
-        case "delete":
-          return "linear-gradient(145deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.15) 100%)";
-        default:
-          return "linear-gradient(145deg, rgba(255, 255, 255, 0.25) 0%, rgba(248, 250, 252, 0.2) 100%)";
-      }
-    }};
-    color: ${(props) => {
-      switch (props.variant) {
-        case "edit":
-          return props.theme.colors.info;
-        case "delete":
-          return props.theme.colors.error;
-        default:
-          return props.theme.colors.text;
-      }
-    }};
-    transform: translateY(-3px) scale(1.15)
-      rotate(
-        ${(props) => {
-          switch (props.variant) {
-            case "edit":
-              return "5deg";
-            case "delete":
-              return "-5deg";
-            default:
-              return "0deg";
-          }
-        }}
-      );
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 5px 15px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    border-color: ${(props) => {
-      switch (props.variant) {
-        case "edit":
-          return "rgba(59, 130, 246, 0.4)";
-        case "delete":
-          return "rgba(239, 68, 68, 0.4)";
-        default:
-          return "rgba(255, 255, 255, 0.4)";
-      }
-    }};
-
-    &::before {
-      opacity: 0.1;
-    }
-
-    &::after {
-      width: 80px;
-      height: 80px;
-    }
-  }
-
-  &:active {
-    transform: translateY(-1px) scale(1.05);
-  }
-
-  /* Efecto especial para botón de eliminar */
-  ${(props) =>
-    props.variant === "delete" &&
-    `
-    &:hover {
-      animation: dangerShake 0.5s ease-in-out;
-    }
-    
-    @keyframes dangerShake {
-      0%, 100% { transform: translateY(-3px) scale(1.15) rotate(-5deg); }
-      25% { transform: translateY(-3px) scale(1.15) rotate(-8deg); }
-      75% { transform: translateY(-3px) scale(1.15) rotate(-2deg); }
-    }
-  `}
-`;
-
-export const TaskDescription = styled(motion.p)`
-  font-size: 1rem;
-  color: ${(props) => props.theme.colors.textSecondary};
-  margin: 0 0 ${(props) => props.theme.spacing.lg} 0;
-  line-height: 1.6;
-  word-break: break-word;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(248, 250, 252, 0.05) 100%
-  );
-  padding: ${(props) => props.theme.spacing.md};
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(15px);
-  position: relative;
-  transition: all 0.4s ease;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(180deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    border-radius: 16px 0 0 16px;
-    transition: width 0.4s ease;
-  }
-
-  &:hover {
-    background: linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.12) 0%,
-      rgba(248, 250, 252, 0.08) 100%
-    );
-    border-color: rgba(102, 126, 234, 0.2);
-    transform: translateX(4px);
-
-    &::before {
-      width: 6px;
-    }
-  }
-`;
-
-export const TaskMeta = styled(motion.div)`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: ${(props) => props.theme.spacing.md};
-  margin-bottom: ${(props) => props.theme.spacing.md};
-`;
-
-export const PriorityBadge = styled(motion.span)`
-  background: ${(props) => {
-    switch (props.priority) {
-      case "alta":
-        return "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)";
-      case "media":
-        return "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
-      case "baja":
-        return "linear-gradient(135deg, #10b981 0%, #059669 100%)";
-      default:
-        return "linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)";
-    }
-  }};
-  color: white;
-  padding: 10px 18px;
-  border-radius: 24px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(15px);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.4s ease;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.3),
-      transparent
-    );
-    transition: left 0.6s ease;
-  }
-
-  &:hover {
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3);
-
-    &::before {
-      left: 100%;
-    }
-  }
-
-  /* Efecto de pulso para alta prioridad */
-  ${(props) =>
-    props.priority === "alta" &&
-    `
-    animation: priorityPulse 2s ease-in-out infinite;
-    
-    @keyframes priorityPulse {
-      0%, 100% { 
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
-      }
-      50% { 
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
-      }
-    }
-  `}
-`;
-
-export const TaskDate = styled(motion.span)`
-  font-size: 0.9rem;
-  color: ${(props) => props.theme.colors.textSecondary};
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(248, 250, 252, 0.05) 100%
-  );
-  padding: 8px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(15px);
-  transition: all 0.4s ease;
-  font-weight: 500;
-
-  svg {
-    font-size: 1.1rem;
-    color: ${(props) => props.theme.colors.primary};
-    transition: transform 0.3s ease;
-  }
-
-  &:hover {
-    background: linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.12) 0%,
-      rgba(248, 250, 252, 0.08) 100%
-    );
-    border-color: rgba(102, 126, 234, 0.2);
-    transform: translateY(-2px);
-
-    svg {
-      transform: scale(1.1) rotate(5deg);
-    }
-  }
-`;
-
-export const AssignedUser = styled(motion.div)`
-  display: flex;
-  align-items: center;
-  gap: ${(props) => props.theme.spacing.sm};
-  font-size: 0.9rem;
-  color: ${(props) => props.theme.colors.textSecondary};
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(248, 250, 252, 0.05) 100%
-  );
-  padding: 10px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(15px);
-  transition: all 0.4s ease;
-  font-weight: 500;
-
-  svg {
-    font-size: 1.1rem;
-    color: ${(props) => props.theme.colors.primary};
-    transition: transform 0.3s ease;
-  }
-
-  &:hover {
-    background: linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.12) 0%,
-      rgba(248, 250, 252, 0.08) 100%
-    );
-    border-color: rgba(102, 126, 234, 0.2);
-    transform: translateY(-2px);
-
-    svg {
-      transform: scale(1.1) rotate(-5deg);
-    }
-  }
-`;
-
-export const AvatarCircle = styled(motion.div)`
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  color: white;
-  font-size: 0.9rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: radial-gradient(
-      circle,
-      rgba(255, 255, 255, 0.3) 0%,
-      transparent 70%
-    );
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: all 0.4s ease;
-  }
-
-  &:hover {
-    transform: scale(1.15) rotate(10deg);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4);
-
-    &::before {
-      width: 100px;
-      height: 100px;
-    }
-  }
-`;
-
-export const TaskFooter = styled(motion.div)`
-  display: flex;
-  flex-direction: column;
-  gap: ${(props) => props.theme.spacing.sm};
-  margin-top: ${(props) => props.theme.spacing.lg};
-  padding-top: ${(props) => props.theme.spacing.md};
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  position: relative;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
+    bottom: -2px;
     left: 0;
     width: 0;
     height: 2px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    border-radius: 0 0 2px 2px;
+    background: ${(props) => getPriorityColors(props.$priority).gradient};
+    transition: width 0.3s ease;
   }
 
-  &:hover::before {
-    width: 100%;
+  &:hover {
+    transform: translateX(4px);
+
+    &::before {
+      width: 100%;
+    }
   }
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+`;
+
+export const TaskActions = styled.div`
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+
+  ${TaskCard}:hover & {
+    opacity: 1;
+  }
+
+  @media (max-width: 768px) {
+    opacity: 1;
+  }
+`;
+
+export const ActionButton = styled(motion.button).withConfig({
+  shouldForwardProp: (prop) => !["variant"].includes(prop),
+})`
+  background: ${(props) => {
+    switch (props.variant) {
+      case "edit":
+        return "rgba(59, 130, 246, 0.2)";
+      case "delete":
+        return "rgba(239, 68, 68, 0.2)";
+      case "menu":
+        return "transparent";
+      default:
+        return "rgba(255, 255, 255, 0.1)";
+    }
+  }};
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 8px;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer; /* Mantener cursor pointer para botones */
+  color: ${(props) => {
+    switch (props.variant) {
+      case "edit":
+        return "#3b82f6";
+      case "delete":
+        return "#ef4444";
+      case "menu":
+        return props.style?.color || "rgba(255, 255, 255, 0.7)";
+      default:
+        return "rgba(255, 255, 255, 0.7)";
+    }
+  }};
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  font-size: 14px;
+  gap: 6px;
+
+  /* Prevenir que los botones activen drag */
+  touch-action: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  &:hover {
+    background: ${(props) => {
+      switch (props.variant) {
+        case "edit":
+          return "rgba(59, 130, 246, 0.3)";
+        case "delete":
+          return "rgba(239, 68, 68, 0.3)";
+        case "menu":
+          return "rgba(255, 255, 255, 0.15)";
+        default:
+          return "rgba(255, 255, 255, 0.15)";
+      }
+    }};
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  span {
+    font-size: 12px;
+    font-weight: 500;
+  }
+`;
+
+export const MenuButton = styled(ActionButton).withConfig({
+  shouldForwardProp: (prop) => !["$active"].includes(prop),
+})`
+  ${(props) =>
+    props.$active &&
+    `
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  `}
+
+  /* Prevenir drag */
+  touch-action: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+`;
+
+export const DragIndicator = styled(motion.div).withConfig({
+  shouldForwardProp: (prop) => !["$isHovered"].includes(prop),
+})`
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 8px;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+
+  /* Aplicar los listeners de drag SOLO a este elemento */
+  ${(props) =>
+    props.$isHovered &&
+    `
+    background: rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+  `}
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  /* Remover cualquier efecto de prevención de drag aquí */
+`;
+
+export const TaskDescription = styled(motion.p)`
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  word-break: break-word;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px;
+  border-radius: 12px;
+  border-left: 3px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-left-color: rgba(255, 255, 255, 0.2);
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+    padding: 10px;
+  }
+`;
+
+export const TaskMeta = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+`;
+
+export const PriorityBadge = styled(motion.span).withConfig({
+  shouldForwardProp: (prop) => !["$priority"].includes(prop),
+})`
+  background: ${(props) => getPriorityColors(props.$priority).gradient};
+  color: white;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 4px 12px ${(props) => getPriorityColors(props.$priority).shadow};
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  svg {
+    font-size: 10px;
+  }
+`;
+
+export const StatusIndicator = styled(motion.span).withConfig({
+  shouldForwardProp: (prop) => !["$status", "$large"].includes(prop),
+})`
+  background: ${(props) => getStatusColors(props.$status).background};
+  color: ${(props) => getStatusColors(props.$status).color};
+  padding: ${(props) => (props.$large ? "8px 12px" : "6px 10px")};
+  border-radius: 12px;
+  font-size: ${(props) => (props.$large ? "0.8rem" : "0.75rem")};
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid ${(props) => getStatusColors(props.$status).border};
+  backdrop-filter: blur(10px);
+
+  svg {
+    font-size: ${(props) => (props.$large ? "12px" : "10px")};
+  }
+
+  ${(props) =>
+    props.$large &&
+    `
+    align-self: flex-start;
+    margin-top: 4px;
+  `}
 `;
 
 export const TaskTags = styled(motion.div)`
   display: flex;
   flex-wrap: wrap;
-  gap: ${(props) => props.theme.spacing.xs};
-  margin-top: ${(props) => props.theme.spacing.sm};
+  gap: 6px;
 `;
 
-export const Tag = styled(motion.span)`
-  background: linear-gradient(
-    145deg,
-    rgba(102, 126, 234, 0.15) 0%,
-    rgba(118, 75, 162, 0.1) 100%
-  );
-  color: ${(props) => props.theme.colors.primary};
-  padding: 4px 12px;
-  border-radius: ${(props) => props.theme.borderRadius.md};
-  font-size: 0.8rem;
+export const Tag = styled(motion.span).withConfig({
+  shouldForwardProp: (prop) => !["$color"].includes(prop),
+})`
+  background: ${(props) =>
+    props.$color ? `${props.$color}20` : "rgba(255, 255, 255, 0.1)"};
+  color: ${(props) => props.$color || "rgba(255, 255, 255, 0.8)"};
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.7rem;
   font-weight: 600;
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  border: 1px solid
+    ${(props) =>
+      props.$color ? `${props.$color}40` : "rgba(255, 255, 255, 0.1)"};
   backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+`;
 
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.2) 50%,
-      transparent 100%
-    );
-    transition: left 0.5s ease;
+export const TaskFooter = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-left,
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
-  &:hover {
-    background: linear-gradient(
-      145deg,
-      rgba(102, 126, 234, 0.2) 0%,
-      rgba(118, 75, 162, 0.15) 100%
-    );
-    border-color: rgba(102, 126, 234, 0.3);
-    transform: translateY(-2px) scale(1.05);
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
 
-    &::before {
-      left: 100%;
+    .footer-right {
+      align-self: flex-end;
     }
   }
 `;
 
-export const DragIndicator = styled(motion.div)`
+export const AssignedUser = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .user-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .user-role {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+`;
+
+export const AvatarCircle = styled(motion.div).withConfig({
+  shouldForwardProp: (prop) => !["$isCurrentUser"].includes(prop),
+})`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: ${(props) =>
+    props.$isCurrentUser
+      ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+      : "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)"};
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid
+    ${(props) =>
+      props.$isCurrentUser
+        ? "rgba(102, 126, 234, 0.4)"
+        : "rgba(255, 255, 255, 0.2)"};
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+`;
+
+export const TaskDate = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+
+  svg {
+    font-size: 12px;
+  }
+`;
+
+export const FloatingMenu = styled(motion.div)`
   position: absolute;
-  top: ${(props) => props.theme.spacing.md};
-  right: ${(props) => props.theme.spacing.md};
-  color: ${(props) => props.theme.colors.textSecondary};
-  font-size: 1.1rem;
-  opacity: 0;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(248, 250, 252, 0.08) 100%
-  );
-  padding: 8px;
+  top: 100%;
+  right: 0;
+  background: rgba(30, 30, 40, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  cursor: grab;
+  padding: 8px;
+  z-index: 1000;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  min-width: 180px;
+`;
 
-  ${TaskCard}:hover & {
-    opacity: 0.9;
-    transform: scale(1.15) rotate(15deg);
-    color: ${(props) => props.theme.colors.primary};
-    background: linear-gradient(
-      145deg,
-      rgba(102, 126, 234, 0.15) 0%,
-      rgba(118, 75, 162, 0.1) 100%
-    );
-    border-color: rgba(102, 126, 234, 0.3);
-  }
-
-  &:active {
-    cursor: grabbing;
-    transform: scale(1.2) rotate(20deg);
-  }
+export const QuickActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;

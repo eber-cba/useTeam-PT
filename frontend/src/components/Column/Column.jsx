@@ -172,7 +172,6 @@ export default function Column({ column, children }) {
         ) : (
           <DefaultHeader
             column={column}
-            taskCount={taskCount}
             onEdit={() => setEditing(true)}
             onDelete={onDelete}
             listeners={listeners}
@@ -311,7 +310,6 @@ const EditingHeader = ({ name, setName, onSave, onCancel }) => (
 // Subcomponente para el header normal
 const DefaultHeader = ({
   column,
-  taskCount,
   onEdit,
   onDelete,
   listeners,
@@ -329,15 +327,6 @@ const DefaultHeader = ({
       >
         {column && column.name ? column.name : "Sin nombre"}
       </ColumnTitle>
-
-      <TaskCounter
-        $count={taskCount}
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 300 }}
-      >
-        {taskCount}
-      </TaskCounter>
     </div>
 
     <ColumnActions>
