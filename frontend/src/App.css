@@ -270,27 +270,29 @@
   margin: 20px;
 }
 
-/* Formulario de tareas */
-.task-form-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2147483647; /* ensure it's above any drag overlay */
+/* Elimina overlays y asegura que los botones sean interactivos */
+.task-form-overlay,
+.auth-modal-overlay {
+  z-index: 10000 !important;
   pointer-events: auto !important;
 }
 
-/* If @dnd-kit or other drag overlay sets a high z-index, lower it so modal stays interactable */
 .dnd-kit-drag-overlay,
 .dnd-kit-DragOverlay,
 .drag-overlay {
-  z-index: 99998 !important;
+  z-index: 9999 !important;
   pointer-events: none !important;
+}
+
+/* Asegura que el tablero y los botones estén por encima de overlays innecesarios */
+.BoardContainer {
+  z-index: 1 !important;
+  pointer-events: auto !important;
+}
+
+.ModernActionButton {
+  z-index: 2 !important;
+  pointer-events: auto !important;
 }
 
 .task-form {

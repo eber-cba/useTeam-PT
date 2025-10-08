@@ -33,6 +33,13 @@ import {
   ColumnsContainer,
   DragOverlayCard,
   EmptyState,
+  ColumnModal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalInput,
+  ModalActions,
+  ModalButton,
 } from "./StyledBoard";
 
 export default function Board() {
@@ -47,6 +54,7 @@ export default function Board() {
   } = useKanban();
   const { user } = useAuth();
   const { addToast } = useToast();
+
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [activeTask, setActiveTask] = useState(null);
   const [showColumnModal, setShowColumnModal] = useState(false);
@@ -56,68 +64,52 @@ export default function Board() {
 
   const handleDragStart = (event) => {
     const { active } = event;
-    // Si es columna, guardar el id
     const columnIds = columns.map((c) => c._id || c.name);
+
     if (columnIds.includes(active.id)) {
       setActiveColumnId(active.id);
     }
-    // If active id is a task id, set activeTask to show overlay
+
     const task = tasks.find((t) => t._id === active.id);
     setActiveTask(task || null);
   };
 
   const handleDragOver = (event) => {
     const { over } = event;
-    if (over) {
-      setOverColumnId(over.id);
-    } else {
-      setOverColumnId(null);
-    }
+    setOverColumnId(over?.id || null);
   };
 
   const handleDragEnd = (event) => {
     setActiveColumnId(null);
     setOverColumnId(null);
     setActiveTask(null);
-    const { active, over } = event;
 
-    // If dragging a column (activeId matches a column id), reorder columns
+    const { active, over } = event;
     const columnIds = columns.map((c) => c._id || c.name);
-    if (columnIds.includes(active.id) && columnIds.includes(over.id)) {
+
+    if (columnIds.includes(active.id) && columnIds.includes(over?.id)) {
       const oldIndex = columnIds.indexOf(active.id);
       const newIndex = columnIds.indexOf(over.id);
+
       if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
         const newCols = arrayMove(columns, oldIndex, newIndex);
-        console.log(
-          "🔄 Reordenando columnas:",
-          newCols.map((c) => c.name)
-        );
         reorderColumns(newCols);
       }
       return;
     }
 
-    // Otherwise, it's a task move: over.id is the column id/name
     const taskId = active.id;
-    const columnId = over.id;
+    const columnId = over?.id;
     const task = tasks.find((t) => t._id === taskId);
-
-    // Find the column by ID or name to get the correct column name
     const targetColumn = columns.find(
       (col) => (col._id && col._id === columnId) || col.name === columnId
     );
 
     if (task && targetColumn && task.columna !== targetColumn.name) {
-      console.log(
-        `📦 Moviendo tarea "${task.titulo}" a columna "${targetColumn.name}"`
-      );
-
-      // Calcular el orden basado en las tareas existentes en la columna destino
       const tasksInTargetColumn = tasks.filter(
         (t) => t.columna === targetColumn.name
       );
       const newOrder = tasksInTargetColumn.length;
-
       moveTask(taskId, targetColumn.name, newOrder);
     }
   };
@@ -127,6 +119,15 @@ export default function Board() {
     return tasks
       .filter((task) => task.columna === name)
       .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+  };
+
+  const handleCreateColumn = () => {
+    if (newColumnName.trim()) {
+      addColumn(newColumnName.trim());
+      setNewColumnName("");
+      setShowColumnModal(false);
+      addToast("Columna creada exitosamente", "success");
+    }
   };
 
   return (
@@ -144,14 +145,6 @@ export default function Board() {
           <LogoContainer>
             <KanbanIcon>📋</KanbanIcon>
             <HeaderTitle>Kanban Team</HeaderTitle>
-            {user && (
-              <UserBadge>
-                <UserAvatar>
-                  {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-                </UserAvatar>
-                <UserName>{user.name || user.email}</UserName>
-              </UserBadge>
-            )}
           </LogoContainer>
         </HeaderLeft>
 
@@ -160,115 +153,16 @@ export default function Board() {
             <ModernActionButton
               variant="primary"
               onClick={() => setShowColumnModal(true)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="action-btn"
             >
               <ButtonIcon>+</ButtonIcon>
-              Columna
+              Nueva Columna
             </ModernActionButton>
-
-            {showColumnModal && (
-              <div
-                style={{
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  width: "100vw",
-                  height: "100vh",
-                  background: "rgba(0,0,0,0.3)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  zIndex: 1000,
-                }}
-              >
-                <div
-                  style={{
-                    background: "#fff",
-                    padding: "2rem",
-                    borderRadius: "12px",
-                    minWidth: "320px",
-                    boxShadow: "0 2px 16px rgba(0,0,0,0.15)",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1rem",
-                    alignItems: "stretch",
-                  }}
-                >
-                  <h3>Nueva columna</h3>
-                  <input
-                    autoFocus
-                    type="text"
-                    placeholder="Nombre de la columna"
-                    value={newColumnName}
-                    onChange={(e) => setNewColumnName(e.target.value)}
-                    style={{
-                      padding: "0.5rem",
-                      borderRadius: "6px",
-                      border: "1px solid #ccc",
-                      fontSize: "1rem",
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        if (newColumnName.trim()) {
-                          addColumn(newColumnName.trim());
-                          setNewColumnName("");
-                          setShowColumnModal(false);
-                        }
-                      }
-                    }}
-                  />
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "1rem",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <button
-                      onClick={() => {
-                        setShowColumnModal(false);
-                        setNewColumnName("");
-                      }}
-                      style={{
-                        padding: "0.5rem 1rem",
-                        borderRadius: "6px",
-                        border: "none",
-                        background: "#eee",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (newColumnName.trim()) {
-                          addColumn(newColumnName.trim());
-                          setNewColumnName("");
-                          setShowColumnModal(false);
-                        }
-                      }}
-                      style={{
-                        padding: "0.5rem 1rem",
-                        borderRadius: "6px",
-                        border: "none",
-                        background: "#007bff",
-                        color: "#fff",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Crear
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
 
             <ModernActionButton
               variant="success"
               onClick={() => setShowTaskForm(true)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="action-btn"
             >
               <ButtonIcon>+</ButtonIcon>
               Nueva Tarea
@@ -277,16 +171,23 @@ export default function Board() {
             <ModernActionButton
               variant="warning"
               onClick={deleteAllTasks}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="action-btn"
             >
               <ButtonIcon>🗑️</ButtonIcon>
-              Eliminar Todas
+              Limpiar Todo
             </ModernActionButton>
           </ActionButtonsContainer>
         </HeaderCenter>
 
         <HeaderRight>
+          {user && (
+            <UserBadge>
+              <UserAvatar>
+                {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
+              </UserAvatar>
+              <UserName>{user.name || user.email}</UserName>
+            </UserBadge>
+          )}
           <ConnectionStatus $isConnected={isConnected}>
             <StatusDot $isConnected={isConnected} />
             <StatusText>
@@ -295,6 +196,46 @@ export default function Board() {
           </ConnectionStatus>
         </HeaderRight>
       </ModernBoardHeader>
+
+      {/* Modal para nueva columna */}
+      {showColumnModal && (
+        <ColumnModal>
+          <ModalOverlay onClick={() => setShowColumnModal(false)} />
+          <ModalContent
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ModalHeader>Crear Nueva Columna</ModalHeader>
+            <ModalInput
+              autoFocus
+              type="text"
+              placeholder="Nombre de la columna"
+              value={newColumnName}
+              onChange={(e) => setNewColumnName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleCreateColumn();
+                if (e.key === "Escape") setShowColumnModal(false);
+              }}
+            />
+            <ModalActions>
+              <ModalButton
+                variant="secondary"
+                onClick={() => setShowColumnModal(false)}
+              >
+                Cancelar
+              </ModalButton>
+              <ModalButton
+                variant="primary"
+                onClick={handleCreateColumn}
+                disabled={!newColumnName.trim()}
+              >
+                Crear Columna
+              </ModalButton>
+            </ModalActions>
+          </ModalContent>
+        </ColumnModal>
+      )}
 
       <DndContext
         collisionDetection={closestCenter}
@@ -326,7 +267,7 @@ export default function Board() {
             ) : (
               columns.map((column, index) => {
                 const colId = column._id || column.name;
-                // Insertar placeholder visual si corresponde
+
                 if (
                   activeColumnId &&
                   overColumnId === colId &&
@@ -336,20 +277,7 @@ export default function Board() {
                     <div
                       key={"ghost-" + colId}
                       className="ghost-placeholder"
-                      style={{
-                        minWidth: 340,
-                        maxWidth: 400,
-                        minHeight: 480,
-                        margin: 8,
-                        borderRadius: 28,
-                        border: "2px dashed #667eea",
-                        background:
-                          "repeating-linear-gradient(135deg, #e0e7ff 0 10px, #fff 10px 20px)",
-                        opacity: 0.4,
-                        pointerEvents: "none",
-                        transition: "all 0.2s",
-                      }}
-                    />, // Placeholder
+                    />,
                     <Column key={colId} column={column} index={index}>
                       <SortableContext
                         items={getTasksForColumn(column).map(
@@ -364,6 +292,7 @@ export default function Board() {
                     </Column>,
                   ];
                 }
+
                 return (
                   <Column key={colId} column={column} index={index}>
                     <SortableContext
@@ -382,7 +311,7 @@ export default function Board() {
         </SortableContext>
 
         <DragOverlay>
-          {activeTask ? (
+          {activeTask && (
             <DragOverlayCard
               initial={{ scale: 0.8, rotate: 0, opacity: 0 }}
               animate={{ scale: 1.08, rotate: 12, opacity: 0.98 }}
@@ -392,38 +321,16 @@ export default function Board() {
                 stiffness: 300,
                 damping: 25,
               }}
-              style={{
-                cursor: "grabbing",
-                userSelect: "none",
-                pointerEvents: "none",
-              }}
             >
               <h4>{activeTask.titulo}</h4>
               <p>{activeTask.descripcion}</p>
               {activeTask.prioridad && (
-                <span
-                  style={{
-                    display: "inline-block",
-                    padding: "4px 8px",
-                    borderRadius: "8px",
-                    fontSize: "0.7rem",
-                    fontWeight: "600",
-                    textTransform: "uppercase",
-                    background:
-                      activeTask.prioridad === "alta"
-                        ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
-                        : activeTask.prioridad === "media"
-                        ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-                        : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                    color: "white",
-                    marginTop: "8px",
-                  }}
-                >
+                <span className={`priority-badge ${activeTask.prioridad}`}>
                   {activeTask.prioridad}
                 </span>
               )}
             </DragOverlayCard>
-          ) : null}
+          )}
         </DragOverlay>
       </DndContext>
 

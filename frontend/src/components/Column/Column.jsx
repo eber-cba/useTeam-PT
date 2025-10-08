@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// Column.jsx
+import React, { useState, useEffect, useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -14,32 +15,35 @@ import {
   TasksContainer,
   EmptyColumnMessage,
   DragHandle,
+  TaskCard,
 } from "./StyledColumn";
 
+/**
+ * Mantengo la lógica: edición, renombrar (onSave -> updateColumn),
+ * eliminar (onDelete -> removeColumn), useDroppable + useSortable.
+ *
+ * Visual: agrego contador, mejor interacción al arrastrar, fallback para renderizar tareas
+ * si no vienen como children usando getTasksForColumn.
+ */
 export default function Column({ column, children }) {
-  const { removeColumn, updateColumn } = useKanban();
+  const { removeColumn, updateColumn, tasks: allTasks } = useKanban();
 
+  // helper (igual que antes) — devuelve tareas por columna (nombre o id)
   const getTasksForColumn = () => {
-    const { tasks } = useKanban();
     const columnName = column && column.name ? column.name : "";
     const columnId = column && column._id ? column._id : "";
-
-    // Filtrar tareas que coincidan con el nombre O el ID de la columna
-    return tasks
-      .filter((task) => {
-        return task.columna === columnName || task.columna === columnId;
-      })
+    return (allTasks || [])
+      .filter(
+        (task) => task.columna === columnName || task.columna === columnId
+      )
       .sort((a, b) => (a.orden || 0) - (b.orden || 0));
   };
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(column && column.name ? column.name : "");
 
-  // Sincronizar el estado local con los cambios del contexto
   useEffect(() => {
-    if (column && column.name) {
-      setName(column.name);
-    }
+    if (column && column.name) setName(column.name);
   }, [column?.name]);
 
   const id =
@@ -48,9 +52,9 @@ export default function Column({ column, children }) {
       : column && column.name
       ? column.name
       : "unknown";
+
   const { isOver, setNodeRef } = useDroppable({ id });
 
-  // sortable wrapper for columns (so columns can be reordered)
   const {
     attributes,
     listeners,
@@ -58,19 +62,18 @@ export default function Column({ column, children }) {
     transform,
     transition,
     isDragging,
-    isSorting,
-    over,
   } = useSortable({ id });
 
+  // style para framer-motion transform + transition
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.7 : 1,
+    opacity: isDragging ? 0.9 : 1,
     zIndex: isDragging ? 1000 : undefined,
-    boxShadow: isDragging
-      ? "0 35px 70px rgba(0,0,0,0.18), 0 18px 35px rgba(0,0,0,0.12)"
-      : undefined,
   };
+
+  // tasks deducidas si no vienen como children
+  const tasksForRender = useMemo(() => getTasksForColumn(), [allTasks, column]);
 
   const onSave = async () => {
     if (!name || !name.trim()) return;
@@ -82,14 +85,12 @@ export default function Column({ column, children }) {
       return;
     }
 
-    console.log(`✏️ [Column] Renombrando columna "${oldName}" a "${newName}"`);
-
     try {
       await updateColumn(id, newName, oldName);
       setEditing(false);
     } catch (e) {
       console.error("❌ [Column] Error al renombrar columna:", e);
-      setName(oldName); // Revertir al nombre anterior
+      setName(oldName);
     }
   };
 
@@ -113,14 +114,14 @@ export default function Column({ column, children }) {
       isOver={isOver}
       data-dragging={isDragging ? "true" : undefined}
       {...attributes}
-      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      initial={{ opacity: 0, y: 30, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -30, scale: 0.9 }}
+      exit={{ opacity: 0, y: -20, scale: 0.98 }}
       transition={{
-        duration: 0.5,
+        duration: 0.45,
         type: "spring",
-        stiffness: 100,
-        damping: 15,
+        stiffness: 140,
+        damping: 18,
       }}
     >
       <ColumnHeader>
@@ -130,17 +131,18 @@ export default function Column({ column, children }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && onSave()}
-              initial={{ scale: 0.95 }}
+              initial={{ scale: 0.98 }}
               animate={{ scale: 1 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.18 }}
               autoFocus
             />
             <ColumnActions>
               <ActionIcon
                 onClick={onSave}
                 variant="edit"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+                title="Guardar"
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.96 }}
               >
                 <FiSave />
               </ActionIcon>
@@ -150,8 +152,9 @@ export default function Column({ column, children }) {
                   setName(column.name);
                 }}
                 variant="delete"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+                title="Cancelar"
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.96 }}
               >
                 <FiX />
               </ActionIcon>
@@ -159,37 +162,66 @@ export default function Column({ column, children }) {
           </>
         ) : (
           <>
-            <ColumnTitle
-              editable={true}
-              onClick={() => setEditing(true)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                alignItems: "center",
+                width: "100%",
+              }}
             >
-              {column && column.name ? column.name : column}
-            </ColumnTitle>
-            {column.createdBy && (
-              <span
+              <ColumnTitle
+                editable={true}
+                onClick={() => setEditing(true)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.995 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                title={column?.name}
+              >
+                {column && column.name ? column.name : "Sin nombre"}
+              </ColumnTitle>
+
+              {/* contador de tareas pequeño */}
+              <div
                 style={{
-                  fontSize: "0.85rem",
-                  color: "rgba(255, 255, 255, 0.7)",
-                  marginTop: "8px",
-                  display: "block",
-                  fontWeight: "500",
+                  marginLeft: 6,
+                  background: "linear-gradient(90deg,#a78bfa,#7c3aed)",
+                  color: "#fff",
+                  padding: "6px 8px",
+                  borderRadius: 999,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  boxShadow: "0 6px 18px rgba(124,58,237,0.12)",
+                  minWidth: 36,
+                  textAlign: "center",
+                }}
+                aria-hidden
+              >
+                {(children && React.Children.count(children)) ||
+                  tasksForRender.length}
+              </div>
+            </div>
+
+            {/* createdBy (opcional) */}
+            {column?.createdBy && (
+              <div
+                style={{
+                  marginLeft: 8,
+                  fontSize: 12,
+                  color: "rgba(15,23,42,0.45)",
                 }}
               >
                 Creada por {column.createdBy}
-              </span>
+              </div>
             )}
+
             <ColumnActions>
               <ActionIcon
                 onClick={() => setEditing(true)}
                 variant="edit"
-                whileHover={{
-                  scale: 1.1,
-                  rotate: 5,
-                  y: -2,
-                }}
-                whileTap={{ scale: 0.95 }}
+                title="Editar columna"
+                whileHover={{ scale: 1.08, rotate: 4, y: -2 }}
+                whileTap={{ scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 <FiEdit2 />
@@ -197,24 +229,19 @@ export default function Column({ column, children }) {
               <ActionIcon
                 onClick={onDelete}
                 variant="delete"
-                whileHover={{
-                  scale: 1.1,
-                  rotate: -5,
-                  y: -2,
-                }}
-                whileTap={{ scale: 0.95 }}
+                title="Eliminar columna"
+                whileHover={{ scale: 1.08, rotate: -4, y: -2 }}
+                whileTap={{ scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 <FiTrash2 />
               </ActionIcon>
+
               <DragHandle
                 {...listeners}
-                whileHover={{
-                  scale: 1.1,
-                  rotate: 10,
-                  y: -2,
-                }}
-                whileTap={{ scale: 0.95 }}
+                title="Mover columna"
+                whileHover={{ scale: 1.06, rotate: 6, y: -2 }}
+                whileTap={{ scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 <FiMenu />
@@ -225,30 +252,59 @@ export default function Column({ column, children }) {
       </ColumnHeader>
 
       <TasksContainer
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
-          delay: 0.2,
-          duration: 0.4,
+          delay: 0.14,
+          duration: 0.36,
           type: "spring",
-          stiffness: 100,
+          stiffness: 110,
         }}
       >
         {children && React.Children.count(children) > 0 ? (
           children
+        ) : tasksForRender.length > 0 ? (
+          tasksForRender.map((task, i) => (
+            <TaskCard
+              key={task._id || task.id || i}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.04 * i, duration: 0.28 }}
+              whileHover={{ scale: 1.02 }}
+            >
+              <div style={{ fontWeight: 700, color: "#0f172a" }}>
+                {task.titulo || task.title || "Tarea"}
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(15,23,42,0.6)" }}>
+                {task.descripcion || task.desc || ""}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginTop: 8,
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ fontSize: 12, color: "rgba(15,23,42,0.45)" }}>
+                  {task.prioridad || task.prio || ""}
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(15,23,42,0.35)" }}>
+                  {task.fecha ? new Date(task.fecha).toLocaleDateString() : ""}
+                </div>
+              </div>
+            </TaskCard>
+          ))
         ) : (
           <EmptyColumnMessage
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            initial={{ opacity: 0, scale: 0.96, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{
-              delay: 0.4,
-              duration: 0.5,
-              type: "spring",
-              stiffness: 80,
-            }}
+            transition={{ delay: 0.2, duration: 0.35 }}
           >
-            <p>✨ No hay tareas aquí</p>
-            <p>Arrastra una tarea o crea una nueva</p>
+            <p style={{ margin: 0, fontWeight: 600 }}>✨ No hay tareas aquí</p>
+            <p style={{ margin: 0, fontSize: 13 }}>
+              Arrastra una tarea o crea una nueva
+            </p>
           </EmptyColumnMessage>
         )}
       </TasksContainer>

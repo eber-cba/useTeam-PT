@@ -10,8 +10,16 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
+  min-height: 100vh;
+  background: linear-gradient(120deg, #f093fb 0%, #667eea 100%);
+  animation: bgMove 12s ease-in-out infinite alternate;
+  background-size: 200% 200%;
   color: #333;
+}
+
+@keyframes bgMove {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
 }
 
 #root {
