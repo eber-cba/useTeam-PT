@@ -14,6 +14,7 @@ async function bootstrap() {
 
   // Orígenes permitidos (CORS)
   const allowedOrigins = [
+    'https://use-team-pt.vercel.app', // tu frontend en Vercel
     process.env.FRONTEND_URL, // producción (Vercel)
     'http://localhost:5173', // desarrollo local
     'http://localhost:5174', // otra pestaña local opcional
