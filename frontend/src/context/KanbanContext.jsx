@@ -490,16 +490,12 @@ export const KanbanProvider = ({ children }) => {
 
     try {
       // Persistir en el backend
-      const response = await fetch(
-        "http://localhost:3000/api/columns/reorder",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ columns: columnsWithOrder }),
-        }
+      const response = await axios.post(
+        `${API_URL}/api/columns/reorder`,
+        { columns: columnsWithOrder }
       );
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         console.error("❌ Error reordenando columnas en el backend");
         addToast?.({
           title: "Error",
@@ -619,33 +615,12 @@ export const KanbanProvider = ({ children }) => {
           : updates.columna;
       }
 
-      const response = await fetch(
-        `http://localhost:3000/api/tareas/${taskId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatePayload),
-        }
+      const response = await axios.put(
+        `${API_URL}/api/tareas/${taskId}`,
+        updatePayload
       );
 
-      if (!response.ok) {
-        if (originalTask) {
-          setTasks((prev = []) =>
-            prev.map((t) => (t._id === taskId ? originalTask : t))
-          );
-        }
-        addToast?.({
-          title: "Error",
-          description:
-            response.status === 401
-              ? "Inicia sesión para editar tareas."
-              : "No se pudo actualizar la tarea.",
-          type: response.status === 401 ? "warning" : "error",
-        });
-        return;
-      }
-
-      const updated = await response.json();
+      const updated = response.data;
 
       // Mapear columna
       const mappedTask = {
@@ -676,6 +651,7 @@ export const KanbanProvider = ({ children }) => {
       });
     }
   };
+
 
   // Eliminar tarea
   const deleteTask = async (taskId) => {
@@ -761,25 +737,15 @@ export const KanbanProvider = ({ children }) => {
   // Actualizar columna
   const updateColumn = async (columnId, newName, oldName) => {
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/columns/${columnId}`,
+      const response = await axios.put(
+        `${API_URL}/api/columns/${columnId}`,
         {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: newName,
-            oldName: oldName,
-          }),
+          name: newName,
+          oldName: oldName,
         }
       );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Error actualizando columna:", errorText);
-        throw new Error("Error actualizando columna");
-      }
-
-      const updated = await response.json();
+      const updated = response.data;
       console.log("✅ Columna actualizada:", updated);
 
       // Actualizar estado local inmediatamente
@@ -823,10 +789,9 @@ export const KanbanProvider = ({ children }) => {
   // Reordenar tareas en columna
   const reorderColumnTasks = async (columnName, orderedIds) => {
     try {
-      await fetch("http://localhost:3000/api/tareas/reorder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ column: columnName, orderedIds }),
+      await axios.post(`${API_URL}/api/tareas/reorder`, {
+        column: columnName,
+        orderedIds,
       });
     } catch (err) {
       console.error("Error reordenando tareas:", err);
@@ -836,6 +801,7 @@ export const KanbanProvider = ({ children }) => {
       });
     }
   };
+
 
   // Mover tarea
   const moveTask = async (taskId, targetColumnName, order) => {
@@ -859,33 +825,15 @@ export const KanbanProvider = ({ children }) => {
       const targetColumn = columns.find((col) => col.name === targetColumnName);
       const targetColumnId = targetColumn ? targetColumn._id : targetColumnName;
 
-      const response = await fetch(
-        `http://localhost:3000/api/tareas/${taskId}`,
+      const response = await axios.put(
+        `${API_URL}/api/tareas/${taskId}`,
         {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            columna: targetColumnId,
-            orden: order || 0,
-          }),
+          columna: targetColumnId,
+          orden: order || 0,
         }
       );
 
-      if (!response.ok) {
-        console.error("Error al mover tarea:", response.statusText);
-        // Revertir cambio
-        setTasks((prevTasks) =>
-          prevTasks.map((task) => (task._id === taskId ? taskToMove : task))
-        );
-        addToast?.({
-          title: "Error",
-          description: "No se pudo mover la tarea.",
-          type: "error",
-        });
-        return;
-      }
-
-      const updated = await response.json();
+      const updated = response.data;
 
       // Mapear la respuesta
       const mappedTask = {
@@ -911,6 +859,7 @@ export const KanbanProvider = ({ children }) => {
       });
     }
   };
+
 
   return (
     <KanbanContext.Provider
